@@ -73,6 +73,7 @@ const LessonsListView = ({ intl, currentLanguage }) => {
       .then(json => {
         if (json.success && isMountedRef.current) {
           setLessons(json.lessons);
+          console.log('json.lessons------->', json.lessons)
           setTotalcount(json.total)
         }
       })
@@ -132,6 +133,21 @@ const LessonsListView = ({ intl, currentLanguage }) => {
       });
   }, [isMountedRef]);
 
+  const handleSearchData = (data) => {
+    const url = `api/lessons/search`
+    const method = 'post';
+    httpClient[method](url, data)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          setLessons(json.lessons);
+          setTotalcount(json.total)
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+
   useEffect(() => {
     getAllTeachers();
     getAllLessoninfos();
@@ -162,6 +178,7 @@ const LessonsListView = ({ intl, currentLanguage }) => {
             deleteLesson={deleteLesson}
             deleteLessons={deleteLessons}
             handleGetData={handleGetData}
+            handleSearchData={handleSearchData}
           />
         </Box>
       </Container>

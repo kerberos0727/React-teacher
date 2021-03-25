@@ -70,18 +70,6 @@ export default {
     key: keyGen(),
     defaultMessage: 'MARKETING'
   },
-  operation: {
-    key: keyGen(),
-    defaultMessage: 'OPERATIONS'
-  },
-  support: {
-    key: keyGen(),
-    defaultMessage: 'SUPPORT'
-  },
-  legal: {
-    key: keyGen(),
-    defaultMessage: 'LEGAL'
-  },
   // menu languages end
 
   language_es: {

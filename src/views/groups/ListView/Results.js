@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
+import FormControlLabel from '@material-ui/core/FormControlLabel';
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
 import { Link as RouterLink } from 'react-router-dom';
@@ -150,7 +150,62 @@ const Results = ({
           onChange={handleQueryChange}
           placeholder={formatMessage(intl.search)}
         />
-        <Box flexGrow={1} />
+        <div style={{ marginLeft: 10 }}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                name="show_groups"
+                color="primary"
+              />
+            }
+            label="Show Groups"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                name="show_primary"
+                color="primary"
+              />
+            }
+            label="Show Private"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                name="hour"
+                color="primary"
+              />
+            }
+            label="1 hour"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                name="days"
+                color="primary"
+              />
+            }
+            label="2 days"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                name="fri"
+                color="primary"
+              />
+            }
+            label="Fri"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                name="sat"
+                color="primary"
+              />
+            }
+            label="Sat"
+          />
+        </div>
       </Box>
       {enableBulkOperations && (
         <div className={classes.bulkOperations}>

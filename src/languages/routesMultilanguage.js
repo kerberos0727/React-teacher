@@ -26,11 +26,11 @@ export default function routes(keyGen) {
 		},
 		urlLessonDetail: {
 			key: keyGen(),
-			defaultMessage: '/app/lesson/{lessonId}/detail'
+			defaultMessage: '/app/lesson/{lessonId}/{topicsName}/detail'
 		},
 		urlLessonEdit: {
 			key: keyGen(),
-			defaultMessage: '/app/lesson/{lessonId}/edit'
+			defaultMessage: '/app/lesson/{lessonId}/{topicsName}/edit'
 		},
 		urlLessonAdd: {
 			key: keyGen(),
@@ -67,26 +67,89 @@ export default function routes(keyGen) {
 			defaultMessage: '/app/groups/{groupId}/edit'
 		},
 		// group end
+
+		// teacher start
 		urlTeachers: {
 			key: keyGen(),
-			defaultMessage: '/app/license'
+			defaultMessage: '/app/teachers'
 		},
+		urlTeacherAdd: {
+			key: keyGen(),
+			defaultMessage: '/app/teacher/add'
+		},
+		urlTeacherEdit: {
+			key: keyGen(),
+			defaultMessage: '/app/teacher/{teacherId}/edit'
+		},
+		urlTeacherDetail: {
+			key: keyGen(),
+			defaultMessage: '/app/teacher/{teacherId}/detail'
+		},
+		// teacher end
+
+		// textbooks start
 		urlTextbooks: {
 			key: keyGen(),
-			defaultMessage: '/app/balance'
+			defaultMessage: '/app/textbooks'
 		},
+		urlTextbookDetail: {
+			key: keyGen(),
+			defaultMessage: '/app/textbook/{textbookId}/detail'
+		},
+		urlTextbookEdit: {
+			key: keyGen(),
+			defaultMessage: '/app/textbook/{textbookId}/edit'
+		},
+		urlTextbookAdd: {
+			key: keyGen(),
+			defaultMessage: '/app/textbook/add'
+		},
+		// textbooks end
+
+		// more start
 		urlMore: {
 			key: keyGen(),
 			defaultMessage: '/app/withdrawal'
 		},
-		urlMoreEdit: {
+
+		// more->edit start
+		urlMoreEditTopic: {
 			key: keyGen(),
-			defaultMessage: '/app/affiliate'
+			defaultMessage: '/app/more/edit/topics'
 		},
+		urlMoreEditTextbook: {
+			key: keyGen(),
+			defaultMessage: '/app/more/edit/textbooks'
+		},
+		urlMoreEditLevel: {
+			key: keyGen(),
+			defaultMessage: '/app/more/edit/levels'
+		},
+		urlMoreEditRoom: {
+			key: keyGen(),
+			defaultMessage: '/app/more/edit/rooms'
+		},
+		urlMoreEditLanguage: {
+			key: keyGen(),
+			defaultMessage: '/app/more/edit/languages'
+		},
+		urlMoreEditLesson: {
+			key: keyGen(),
+			defaultMessage: '/app/more/edit/lessons'
+		},
+		urlMoreEditHeard: {
+			key: keyGen(),
+			defaultMessage: '/app/more/edit/heards'
+		},
+		// more->edit end
+
+		// log start
 		urlMoreLog: {
 			key: keyGen(),
-			defaultMessage: '/app/marketing'
+			defaultMessage: '/app/more/log'
 		},
+		// log end
+
 		urlMoreLibrary: {
 			key: keyGen(),
 			defaultMessage: '/app/operation'
@@ -123,13 +186,32 @@ export default function routes(keyGen) {
 			key: keyGen(),
 			defaultMessage: '/register'
 		},
+		// start exams
 		urlMoreExams: {
 			key: keyGen(),
-			defaultMessage: '/admin/login'
+			defaultMessage: '/app/more/exams'
 		},
+		urlMoreExamsEdit: {
+			key: keyGen(),
+			defaultMessage: '/app/more/exams/{itemId}/{itemType}/edit'
+		},
+		urlMoreExamsAdd: {
+			key: keyGen(),
+			defaultMessage: '/app/more/exams/{itemType}/add'
+		},
+		// end exams
 		urlMoreContracts: {
 			key: keyGen(),
-			defaultMessage: '/register'
+			defaultMessage: '/app/more/contracts'
 		},
+		urlContractAdd: {
+			key: keyGen(),
+			defaultMessage: '/app/more/contracts/add'
+		},
+		urlContractEdit: {
+			key: keyGen(),
+			defaultMessage: '/app/more/contracts/{contractId}/edit'
+		},
+		// more end
 	}
 }

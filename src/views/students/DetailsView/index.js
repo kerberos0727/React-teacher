@@ -34,10 +34,10 @@ const StudentDetailView = ({ intl }) => {
   const params = useParams();
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
-  const [student, setStudent] = useState(null);
-  const [groupids, setGroupids] = useState(null);
-  const [textbookinfo, setTextbookinfo] = useState(null);
-  const [noteinfo, setNotesinfo] = useState(null);
+  const [student, setStudent] = useState([]);
+  const [groupids, setGroupids] = useState([]);
+  const [textbookinfo, setTextbookinfo] = useState([]);
+  const [noteinfo, setNotesinfo] = useState([]);
 
   const getStudent = useCallback(async () => {
     httpClient.get(`api/student/${params.studentId}`)
@@ -49,7 +49,7 @@ const StudentDetailView = ({ intl }) => {
       .catch((error) => {
         console.log(error);
       });
-  }, [isMountedRef]);
+  }, [isMountedRef, params.studentId]);
 
   const getGroupsstudentids = useCallback(async () => {
     httpClient.get(`api/groupsstudents/${params.studentId}`)
@@ -61,7 +61,7 @@ const StudentDetailView = ({ intl }) => {
       .catch((error) => {
         console.log('error--->', error);
       });
-  }, [isMountedRef]);
+  }, [isMountedRef, params.studentId]);
 
   const getTextbookinfo = useCallback(async () => {
     // httpClient.get(`api/textbooks/8395`)
@@ -74,7 +74,7 @@ const StudentDetailView = ({ intl }) => {
       .catch((error) => {
         console.log('error--->', error);
       });
-  }, [isMountedRef]);
+  }, [isMountedRef, params.studentId]);
 
   const getNotesinfo = useCallback(async () => {
     httpClient.get(`api/notes/${params.studentId}/all`)
@@ -86,16 +86,16 @@ const StudentDetailView = ({ intl }) => {
       .catch((error) => {
         console.log('error--->', error);
       });
-  }, [isMountedRef]);
+  }, [isMountedRef, params.studentId]);
 
   useEffect(() => {
     getNotesinfo();
     getTextbookinfo();
     getGroupsstudentids();
     getStudent();
-  }, [getStudent, getGroupsstudentids, getTextbookinfo]);
+  }, [getStudent, getGroupsstudentids, getTextbookinfo, getNotesinfo]);
 
-  if (!student) {
+  if (student.length === 0) {
     return null;
   }
 

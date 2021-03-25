@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link as RouterLink, useHistory } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
@@ -9,13 +9,15 @@ import {
 	Link,
 	SvgIcon,
 	Typography,
-	makeStyles
+	makeStyles,
 } from '@material-ui/core';
 import NavigateNextIcon from '@material-ui/icons/NavigateNext';
 import NavigateBeforeIcon from '@material-ui/icons/NavigateBefore';
 import {
 	PlusCircle as PlusCircleIcon,
 } from 'react-feather';
+import TextField from '@material-ui/core/TextField';
+import Autocomplete from '@material-ui/lab/Autocomplete';
 
 const useStyles = makeStyles((theme) => ({
 	root: {},
@@ -24,18 +26,67 @@ const useStyles = makeStyles((theme) => ({
 		'& + &': {
 			marginLeft: theme.spacing(1)
 		}
-	}
+	},
+	recomment_combo: {
+		width: 230, height: 50, marginRight: 10
+		// "@media (max-width: 1370px)": { width: 200 }
+	},
 }));
+
+const options = ['topics', 'textbooks', 'levels', 'rooms', 'languages', 'lesson info', 'heard of us'];
 
 const HeaderBreadcrumbs = ({ className, ...rest }) => {
 	const classes = useStyles();
 	const history = useHistory();
+	const [value, setValue] = React.useState('');
+	const [inputValue, setInputValue] = React.useState('');
+
 	const {
 		crumbs,
 		goBack,
 		buttonRight,
 		actualPage,
+		checkbox
 	} = rest;
+
+	useEffect(() => {
+		if (rest.checkbox !== undefined)
+			setValue(rest.checkbox.value)
+	}, [rest.checkbox])
+
+	const handleChangeState = (event, newValue) => {
+		if (newValue !== null) {
+			setValue(newValue);
+			switch (newValue) {
+				case "lesson info":
+					history.push(`/app/more/edit/lessons`)
+					break;
+				case "heard of us":
+					history.push(`/app/more/edit/heards`)
+					break;
+				default:
+					history.push(`/app/more/edit/${newValue}`)
+					break;
+			}
+		}
+	}
+
+	const renderCheckbox = () => {
+		return (checkbox) ? (
+			<Autocomplete
+				value={value}
+				onChange={handleChangeState}
+				inputValue={inputValue}
+				onInputChange={(event, newInputValue) => {
+					setInputValue(newInputValue);
+				}}
+				id="controllable-states-demo"
+				options={options}
+				style={{ width: 300 }}
+				renderInput={(params) => <TextField {...params} variant="outlined" />}
+			/>
+		) : null
+	}
 
 	const renderButtonAddEdit = () => {
 		return (buttonRight) ? (
@@ -51,16 +102,16 @@ const HeaderBreadcrumbs = ({ className, ...rest }) => {
 						variant="contained"
 						startIcon={
 							<SvgIcon fontSize="small">
-							{
-								(buttonRight.icon)
-									? buttonRight.icon
-									: <PlusCircleIcon />
-							}
+								{
+									(buttonRight.icon)
+										? buttonRight.icon
+										: <PlusCircleIcon />
+								}
 							</SvgIcon>
 						}
 					>
 						{(buttonRight.label) ? buttonRight.label : 'Agregar'}
-				</Button>
+					</Button>
 				</Link>
 			</Grid>
 		) : null;
@@ -72,7 +123,7 @@ const HeaderBreadcrumbs = ({ className, ...rest }) => {
 				container
 				direction="row"
 				alignItems="center"
-				style={{cursor: 'pointer'}}
+				style={{ cursor: 'pointer' }}
 			>
 				<NavigateBeforeIcon fontSize="small" />
 				<Typography
@@ -87,7 +138,7 @@ const HeaderBreadcrumbs = ({ className, ...rest }) => {
 	}
 
 	const renderCrumbs = () => {
-		if(!crumbs) return null;
+		if (!crumbs) return null;
 
 		let key = 0;
 
@@ -154,8 +205,9 @@ const HeaderBreadcrumbs = ({ className, ...rest }) => {
 					{actualPage}
 				</Typography>
 			</Grid>
-			
+
 			{renderButtonAddEdit()}
+			{renderCheckbox()}
 		</Grid>
 	);
 };
@@ -183,6 +235,7 @@ HeaderBreadcrumbs.propTypes = {
 	className: PropTypes.string,
 	actualPage: PropTypes.string,
 	buttonRight: PropTypes.object,
+	checkbox: PropTypes.object
 };
 
 export default HeaderBreadcrumbs;

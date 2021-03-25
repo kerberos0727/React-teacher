@@ -17,7 +17,6 @@ import {
 import LanguageIcon from '@material-ui/icons/Language';
 
 /* intl */
-import { safeJSONStringify } from 'src/utils/';
 import { changeLanguage } from 'src/actions/languageAction';
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
 

@@ -166,7 +166,6 @@ const StudentInfo = ({ student, groupids, noteinfos, textbookinfo, intl, current
     noteinfos.map((val) => {
       data += val.notelist;
     })
-    console.log('notesdata--->', data)
     setNotesval(data);
   }, [])
 

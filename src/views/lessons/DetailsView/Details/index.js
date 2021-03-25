@@ -9,13 +9,17 @@ const useStyles = makeStyles(() => ({
 	root: {}
 }));
 
-const Details = ({ lesson, className }) => {
+const Details = ({ lesson, textbooks, students, className }) => {
 	const classes = useStyles();
 
 	return (
 		<Grid className={clsx(classes.root)} container spacing={3} >
 			<Grid item lg={12} md={12} xl={12} xs={12} >
-				<LessonInfo lesson={lesson} />
+				<LessonInfo
+					lesson={lesson}
+					textbooks={textbooks}
+					students={students}
+				/>
 			</Grid>
 		</Grid>
 	);
@@ -23,7 +27,9 @@ const Details = ({ lesson, className }) => {
 
 Details.propTypes = {
 	className: PropTypes.string,
-	lesson: PropTypes.object.isRequired
+	lesson: PropTypes.object.isRequired,
+	textbooks: PropTypes.object.isRequired,
+	students: PropTypes.object.isRequired
 };
 
 export default Details;

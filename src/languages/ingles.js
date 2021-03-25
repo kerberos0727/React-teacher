@@ -98,7 +98,14 @@ export default {
 		key: keyGen(),
 		defaultMessage: 'Contracts'
 	},
-
+	addContract: {
+		key: keyGen(),
+		defaultMessage: 'Add Contract'
+	},
+	editContract: {
+		key: keyGen(),
+		defaultMessage: 'Edit Contract'
+	},
 	studentDetail: {
 		key: keyGen(),
 		defaultMessage: 'Student Detail'
@@ -122,6 +129,14 @@ export default {
 	groupDetail: {
 		key: keyGen(),
 		defaultMessage: 'Group Detail'
+	},
+	teacherDetail: {
+		key: keyGen(),
+		defaultMessage: 'Teacher Detail'
+	},
+	textbookDetail: {
+		key: keyGen(),
+		defaultMessage: 'Textbook Detail'
 	},
 	// end new code
 

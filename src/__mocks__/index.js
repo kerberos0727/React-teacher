@@ -31,4 +31,7 @@ import './constants'
 import './lessons'
 import './bills'
 import './groups'
+import './teacher'
+import './textbook'
+import './more'
 // 2021.02.22

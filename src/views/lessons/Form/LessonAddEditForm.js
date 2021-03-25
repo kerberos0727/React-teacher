@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import clsx from 'clsx';
 import { Formik } from 'formik';
 import PropTypes from 'prop-types';
@@ -6,7 +6,6 @@ import { useSnackbar } from 'notistack';
 import {
   Grid,
   Card,
-  CardHeader,
   Button,
   makeStyles,
   CardContent,
@@ -27,7 +26,6 @@ import Paper from '@material-ui/core/Paper';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
-import Divider from '@material-ui/core/Divider';
 import List from '@material-ui/core/List';
 import "react-perfect-scrollbar/dist/css/styles.css";
 import {
@@ -41,6 +39,7 @@ import {
 } from 'src/utils';
 import httpClient from 'src/utils/httpClient';
 import 'src/components/global';
+import useIsMountedRef from 'src/hooks/useIsMountedRef';
 
 /* connectIntl */
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
@@ -52,11 +51,6 @@ function not(a, b) {
 function intersection(a, b) {
   return a.filter((value) => b.indexOf(value) !== -1);
 }
-
-function union(a, b) {
-  return [...a, ...not(b, a)];
-}
-
 
 const CssTextField = withStyles({
   root: {
@@ -157,7 +151,7 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(1, 2),
   },
   list: {
-    width: 200,
+    width: '100%',
     height: 230,
     backgroundColor: theme.palette.background.paper,
     overflow: 'auto',
@@ -177,24 +171,220 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const LessonAddEditForm = ({ lesson, update, intl }) => {
+const LessonAddEditForm = ({ lesson, textbooks, students, topics, update, intl }) => {
   const classes = useStyles();
   const history = useHistory();
   const { enqueueSnackbar } = useSnackbar();
-  const [selectedDate, setSelectedDate] = React.useState(new Date());
-  const [issubmitting, setIsSubmitting] = React.useState(false);
+  const isMountedRef = useIsMountedRef();
+  const [combovalues, setCombovalues] = React.useState({
+    teacher: lesson.teacher,
+    level: lesson.LEVEL,
+    language: lesson.LANGUAGE,
+    lessoninfo: lesson.lessoninfo,
+    groupName: lesson.groupName
+  });
+
+  const handleChangeCombovalues = (name, value) => {
+    setCombovalues({ ...combovalues, [name]: value });
+  };
+  const [topicsvalidate, setTopicsValidate] = React.useState(true);
+  const [topicsdelvalidate, setTopicsDelValidate] = React.useState(true);
+  const [topicseditvalidate, setTopicsEditValidate] = React.useState(true);
+
+  const [etopics, setETopics] = React.useState({
+    lessonid: 0,
+    topicid: 0,
+    homework: '',
+    id: 0,
+    name: '',
+  })
+
+  const handleChangeEtopics = (name, value) => {
+    if (name === 'name') {
+      let flag = false, topicsid = 0;
+      for (let i = 0; i < topics.length; i++) {
+        if (topics[i].name === value && value !== null) {
+          flag = true;
+          topicsid = topics[i].id;
+        }
+      }
+      if (!flag) {
+        let data = { ...etopics }
+        data.name = value;
+        data.id = topicsid;
+        setETopics(data);
+      }
+      setTopicsValidate(flag)
+    }
+
+    if (name === 'homework')
+      setETopics({ ...etopics, [name]: value ? 'x' : '' });
+
+    if (topicsdelvalidate === false)
+      setTopicsEditValidate(false);
+  }
+
+  const handleChangeEtopicsEdit = (data) => {
+    setETopics(data);
+    setTopicsDelValidate(false);
+  }
+
+  const handleAddTopics = () => {
+    setTopicsValidate(true);
+    setTopicsEditValidate(true);
+    setTopicsDelValidate(true);
+    const newChecked = [...state_topics];
+    newChecked.push(etopics);
+    setStateTopics(newChecked);
+  }
+
+  const handleDelTopics = () => {
+    const currentIndex = state_topics.indexOf(etopics);
+    const newChecked = [...state_topics];
+    newChecked.splice(currentIndex, 1);
+    setStateTopics(newChecked);
+    setTopicsDelValidate(true);
+  }
+
+  const handleEditTopics = () => {
+    let data = []
+    for (let i = 0; i < state_topics.length; i++) {
+      if (state_topics[i].name !== etopics.name)
+        data.push(state_topics[i])
+      else
+        data.push(etopics)
+    }
+    setStateTopics(data);
+    setTopicsEditValidate(true);
+  }
+
+  const [textbookvalidate, setTextbookValidate] = React.useState(true);
+  const [textbookdelvalidate, setTextbookDelValidate] = React.useState(true);
+  const [textbookeditvalidate, setTextbookEditValidate] = React.useState(true);
+
+  const [etextbooks, setETextbooks] = React.useState({
+    id: 0,
+    lessonid: 0,
+    textBookid: 0,
+    unit: '',
+    homework: '',
+    exercise: '',
+    textBookName: '',
+    from: '',
+    to: '',
+    pages: '',
+  })
+
+  const handleChangeEtextbook = (name, value) => {
+    if (value !== null) {
+      if (name === 'textBookName') {
+        let flag = false;
+        for (let i = 0; i < state_textbooks.length; i++) {
+          if (state_textbooks[i].textBookName === value.textBookName && value !== null)
+            flag = true;
+        }
+        if (!flag) {
+          let data = { ...etextbooks }
+          data.textBookName = value.textBookName;
+          data.id = value.id;
+          setETextbooks(data);
+        }
+        setTextbookValidate(flag)
+      }
+    }
+
+    if (name === 'homework')
+      setETextbooks({ ...etextbooks, [name]: value ? 'x' : '' });
+    if (name === 'unit' || name === 'exercise' || name === 'pages')
+      setETextbooks({ ...etextbooks, [name]: value });
+
+    if (textbookdelvalidate === false)
+      setTextbookEditValidate(false);
+  }
+
+  const handleChangeEtextbookEdit = (data) => {
+    console.log(data)
+    setETextbooks(data);
+    setTextbookDelValidate(false);
+  }
+
+  const handleAddTextbooks = () => {
+    setTextbookValidate(true);
+    setTextbookEditValidate(true);
+    setTextbookDelValidate(true);
+    const newChecked = [...state_textbooks];
+    newChecked.push(etextbooks);
+    setStateTextbooks(newChecked);
+  }
+
+  const handleDelEtextbook = () => {
+    const currentIndex = state_textbooks.indexOf(etextbooks);
+    const newChecked = [...state_textbooks];
+    newChecked.splice(currentIndex, 1);
+    setStateTextbooks(newChecked);
+    setTextbookDelValidate(true);
+  }
+
+  const handleEditEtextbook = () => {
+    let data = []
+    for (let i = 0; i < state_textbooks.length; i++) {
+      if (state_textbooks[i].textBookName !== etextbooks.textBookName)
+        data.push(state_textbooks[i])
+      else
+        data.push(etextbooks)
+    }
+    setStateTextbooks(data);
+    setTextbookEditValidate(true);
+  }
 
   // transfer list for start
-  const [checked, setChecked] = React.useState([]);
-  const [left, setLeft] = React.useState([0, 1, 2, 3]);
-  const [right, setRight] = React.useState([4, 5, 6, 7]);
+  const [searchVal, setSearchVal] = React.useState({
+    name: '',
+    active: false
+  });
 
-  const leftChecked = intersection(checked, left);
-  const rightChecked = intersection(checked, right);
+  const [state_topics, setStateTopics] = React.useState(topics)
+  const [state_textbooks, setStateTextbooks] = React.useState(textbooks)
+
+  const [studentchecked, setStudentChecked] = React.useState([]);
+  const [totalstudents, setTotalStudents] = React.useState(global.Allstudents);
+  const [leftStudents, setLeftStudnets] = React.useState(totalstudents);
+  const [selectedstudents, setSelectedStudnets] = React.useState(students);
+  const [rightStudnets, setRightStudnets] = React.useState(selectedstudents);
+  const studentsleftChecked = intersection(studentchecked, leftStudents);
+  const studentsrightChecked = intersection(studentchecked, rightStudnets);
+
+  const handleChangeSearchVal = (name, value) => {
+    let data = { searchVal };
+    if (name === 'name') {
+      setSearchVal({ ...searchVal, [name]: value.target.value });
+      data.name = value.target.value;
+    }
+    else {
+      setSearchVal({ ...searchVal, [name]: value });
+      data.name = value;
+    }
+    handleSearch(data);
+  }
+
+  const handleSearch = (demodata) => {
+    let data = { searchVals: demodata, pagenum: 0, limitnum: 1000 }
+    const url = `api/student/search`
+    const method = 'post';
+    httpClient[method](url, data)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          setLeftStudnets(json.students);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
 
   const handleToggle = (value) => () => {
-    const currentIndex = checked.indexOf(value);
-    const newChecked = [...checked];
+    const currentIndex = studentchecked.indexOf(value);
+    const newChecked = [...studentchecked];
 
     if (currentIndex === -1) {
       newChecked.push(value);
@@ -202,164 +392,126 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
       newChecked.splice(currentIndex, 1);
     }
 
-    setChecked(newChecked);
-  };
-
-  const numberOfChecked = (items) => intersection(checked, items).length;
-
-  const handleToggleAll = (items) => () => {
-    if (numberOfChecked(items) === items.length) {
-      setChecked(not(checked, items));
-    } else {
-      setChecked(union(checked, items));
-    }
+    setStudentChecked(newChecked);
   };
 
   const handleCheckedRight = () => {
-    setRight(right.concat(leftChecked));
-    setLeft(not(left, leftChecked));
-    setChecked(not(checked, leftChecked));
+    setRightStudnets(rightStudnets.concat(studentsleftChecked));
+    setLeftStudnets(not(leftStudents, studentsleftChecked));
+    setStudentChecked(not(studentchecked, studentsleftChecked));
   };
 
   const handleCheckedLeft = () => {
-    setLeft(left.concat(rightChecked));
-    setRight(not(right, rightChecked));
-    setChecked(not(checked, rightChecked));
+    setLeftStudnets(leftStudents.concat(studentsrightChecked));
+    setRightStudnets(not(rightStudnets, studentsrightChecked));
+    setStudentChecked(not(studentchecked, studentsrightChecked));
   };
 
-  const customList = (title, items) => (
-    <Card>
-      <CardHeader
-        className={classes.cardHeader}
-        avatar={
-          <Checkbox
-            onClick={handleToggleAll(items)}
-            checked={numberOfChecked(items) === items.length && items.length !== 0}
-            indeterminate={numberOfChecked(items) !== items.length && numberOfChecked(items) !== 0}
-            disabled={items.length === 0}
-            inputProps={{ 'aria-label': 'all items selected' }}
-          />
-        }
-        title={title}
-        subheader={`${numberOfChecked(items)}/${items.length} selected`}
-      />
-      <Divider />
-      <List className={classes.list} dense component="div" role="list">
-        {items.map((value) => {
-          const labelId = `transfer-list-all-item-${value}-label`;
+  const customList = (items) => (
+    <Paper style={{ whiteSpace: 'nowrap' }}>
+      <List dense component="div" role="list" className={classes.list}>
+        <ListItem role="listitem" button>
+          <ListItemIcon>
+            <Checkbox
+              disabled={true}
+            />
+          </ListItemIcon>
+          <ListItemText primary={'First Name'} style={{ width: '50%', textAlign: 'left' }} />
+          <ListItemText primary={'Last Name'} style={{ width: '50%', textAlign: 'left' }} />
+        </ListItem>
+        {items.map((value, index) => {
+          const labelId = `transfer-list-item-${value.id}-label`;
           return (
-            <ListItem key={value} role="listitem" button onClick={handleToggle(value)}>
-              <ListItemIcon>
+            <ListItem key={index} role="listitem" button onClick={handleToggle(value)}>
+              <ListItemIcon key={index + 1}>
                 <Checkbox
-                  checked={checked.indexOf(value) !== -1}
+                  key={index + 2}
+                  checked={studentchecked.indexOf(value) !== -1}
                   tabIndex={-1}
                   disableRipple
                   inputProps={{ 'aria-labelledby': labelId }}
                 />
               </ListItemIcon>
-              <ListItemText id={labelId} primary={`List item ${value + 1}`} />
+              <ListItemText id={labelId} primary={value.firstName} key={index + 3} />
+              <ListItemText id={labelId} primary={value.lastName} key={index + 4} />
             </ListItem>
           );
         })}
         <ListItem />
       </List>
-    </Card>
+    </Paper>
   );
 
   // transfer list for end
 
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
-  };
-
-  const serealizeData = (data, update = false) => {
-    let formData = new FormData();
-
-    if (update) {
-      // update...
-      // Logic that applies only when editing
-    } else {
-      // create...
-      // Logic that applies only when creating
-    }
-    // Logic that applies both when creating and editing
-    for (const input in data) {
-      switch (input) {
-        // this is used for when you want
-        // to treat a field differently from the rest
-        case 'custom_field':
-          break;
-        case 'promoted_to_home':
-        case 'expires':
-        case 'published':
-          formData.append(input, (data[input]) ? 1 : 0);
-          break;
-        default:
-          try {
-            data[input] && formData.append(input, data[input]);
-          } catch (err) {
-            console.error(err)
-          }
-      }
-    }
-
-    return formData;
-  }
-
   return (
     <Formik
       initialValues={{
-        title: lesson.title || '',
-        description: lesson.description || '',
-        promoted_to_home: Boolean(lesson.promoted_to_home) || false,
-        expires: Boolean(lesson.expires) || false,
-        published: Boolean(lesson.published) || false,
+        lessonDate: lesson.lessonDate || new Date(),
+        startTime: "2021-01-01T" + lesson.startTime || new Date(),
+        endTime: "2021-01-01T" + lesson.endTime || new Date()
       }}
       onSubmit={
         async (values, { setErrors }) => {
-          try {
-            setIsSubmitting(true);
-            let data = { ...values };
+          let levelId, languageId, teacherId, lessoninfoId, groupnameId;
+          global.Allteachers.map((val) => {
+            if (val.name === combovalues.teacher)
+              teacherId = val.id
+          })
+          global.Allclassis.map((val) => {
+            if (val.name === combovalues.level)
+              levelId = val.id
+          })
+          global.Alllanguages.map((val) => {
+            if (val.name === combovalues.language)
+              languageId = val.id
+          })
+          global.Allgroups.map((val) => {
+            if (val.name === combovalues.groupName)
+              groupnameId = val.id
+          })
+          global.Alllessoninfos.map((val) => {
+            if (val.name === combovalues.lessoninfo)
+              lessoninfoId = val.id
+          })
 
-            let errors = {};
 
-            if (data.expiration_date) {
-              data.expiration_date = formatDate(data.expiration_date);
-            } else {
-              delete data.expiration_date;
+          let senddata = {
+            values: values,
+            students: rightStudnets,
+            topics: state_topics,
+            textbooks: state_textbooks,
+            id: lesson.id,
+            combovalues: {
+              teacherId: teacherId,
+              levelId: levelId,
+              languageId: languageId,
+              lessoninfoId: lessoninfoId,
+              groupnameId: groupnameId
             }
+          };
 
-            if (Object.keys(errors).length) {
-              setErrors(errors);
-              setIsSubmitting(false);
-              return;
-            }
+          console.log('senddata--->', senddata)
+          const url = `api/lessons/${(update) ? 'update' : 'create'}`
+          const method = (update) ? 'put' : 'post';
+          httpClient[method](url, senddata)
+            .then(json => {
+              if (json.success && isMountedRef.current) {
+                enqueueSnackbar(
+                  formatMessage(intl[(update) ? 'Updated successfully' : 'Added successfully']),
+                  { variant: 'success' }
+                )
+              }
+              else
+                enqueueSnackbar(
+                  formatMessage('FAILD'),
+                  { variant: 'error' }
+                )
+            })
+            .catch((error) => {
+              console.log(error);
+            });
 
-            let url = `api/lesson/${(update) ? lesson.id + '/edit' : 'create'}`;
-
-            await httpClient.postFile(url, serealizeData(data))
-              .then(({ data }) => {
-                if (data.status === 1) {
-                  enqueueSnackbar(
-                    formatMessage(intl[(update) ? 'successUpdatedLesson' : 'successAddedLesson']),
-                    { variant: 'success' }
-                  )
-                  history.push(formatMessage(intl.urlLesson));
-                }
-              })
-              .catch((err) => {
-                console.error(err);
-                printErrors(err.response.data, enqueueSnackbar, { ...intl, formatMessage });
-                setIsSubmitting(false);
-              })
-          } catch (err) {
-            console.error(err);
-            setIsSubmitting(false);
-            enqueueSnackbar(
-              formatMessage(intl.unexpectedError),
-              { variant: 'error' }
-            )
-          }
         }
       }
     >
@@ -370,6 +522,7 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
         handleBlur,
         handleSubmit,
         handleChange,
+        setFieldValue
       }) => {
 
         return (
@@ -388,10 +541,10 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                                 <div className={classes.boldletter}>Date:</div>
                                 <KeyboardDatePicker
                                   format="MM/DD/YYYY"
-                                  name="startdate"
-                                  value={selectedDate}
+                                  name="lessonDate"
+                                  value={values.lessonDate}
                                   style={{ width: '65%' }}
-                                  onChange={handleDateChange}
+                                  onChange={(date) => setFieldValue('lessonDate', date)}
                                 />
                               </div>
                             </Grid>
@@ -400,9 +553,9 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                                 <div className={classes.boldletter}>Start:</div>
                                 <KeyboardTimePicker
                                   margin="normal"
-                                  id="start"
-                                  value={selectedDate}
-                                  onChange={handleDateChange}
+                                  id="startTime"
+                                  value={values.startTime}
+                                  onChange={(date) => setFieldValue('startTime', date)}
                                   style={{ width: '65%', margin: 0 }}
                                   KeyboardButtonProps={{
                                     'aria-label': 'change time',
@@ -415,9 +568,9 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                                 <div className={classes.boldletter}>End:</div>
                                 <KeyboardTimePicker
                                   margin="normal"
-                                  id="end"
-                                  value={selectedDate}
-                                  onChange={handleDateChange}
+                                  id="endTime"
+                                  value={values.endTime}
+                                  onChange={(date) => setFieldValue('endTime', date)}
                                   style={{ width: '65%', margin: 0 }}
                                   KeyboardButtonProps={{
                                     'aria-label': 'change time',
@@ -437,6 +590,8 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                                 getOptionLabel={(option) => option}
                                 style={{ width: '65%', height: 50 }}
                                 renderInput={(params) => <CssTextField {...params} />}
+                                onChange={(event, value) => { handleChangeCombovalues('teacher', value) }}
+                                value={combovalues.teacher}
                               />
                             </div>
                           </Grid>
@@ -450,6 +605,8 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                                 getOptionLabel={(option) => option}
                                 style={{ width: '65%', height: 50 }}
                                 renderInput={(params) => <CssTextField {...params} />}
+                                onChange={(event, value) => { handleChangeCombovalues('level', value) }}
+                                value={combovalues.level}
                               />
                             </div>
                           </Grid>
@@ -464,6 +621,8 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                                 getOptionLabel={(option) => option}
                                 style={{ width: '65%', height: 50 }}
                                 renderInput={(params) => <CssTextField {...params} />}
+                                onChange={(event, value) => { handleChangeCombovalues('language', value) }}
+                                value={combovalues.language}
                               />
                             </div>
                           </Grid>
@@ -477,6 +636,8 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                                 getOptionLabel={(option) => option}
                                 style={{ width: '65%', height: 50 }}
                                 renderInput={(params) => <CssTextField {...params} />}
+                                onChange={(event, value) => { handleChangeCombovalues('lessoninfo', value) }}
+                                value={combovalues.lessoninfo}
                               />
                             </div>
                           </Grid>
@@ -486,11 +647,13 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                             <div className={classes.input_container}>
                               <div className={classes.boldletter}>Group:</div>
                               <Autocomplete
-                                id="group"
+                                id="groupName"
                                 options={global.groups}
                                 getOptionLabel={(option) => option}
                                 style={{ width: '65%', height: 50 }}
                                 renderInput={(params) => <CssTextField {...params} />}
+                                onChange={(event, value) => { handleChangeCombovalues('groupName', value) }}
+                                value={combovalues.groupName}
                               />
                             </div>
                             <div className={classes.input_container}>
@@ -498,23 +661,21 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                             </div>
                             <Grid container>
                               <Grid item md={5} xs={12}>
-                                <CssTextField
-                                  id="topics_input"
-                                  style={{ width: '95%', height: 50 }}
-                                />
                                 <Autocomplete
                                   id="topic"
                                   options={global.topics}
                                   getOptionLabel={(option) => option}
                                   style={{ width: '95%', height: 50 }}
                                   renderInput={(params) => <CssTextField {...params} />}
+                                  value={etopics.name}
+                                  onChange={(event, value) => { handleChangeEtopics('name', value) }}
                                 />
                                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                                   <FormControlLabel
                                     control={
                                       <Checkbox
-                                        // checked={state.checkedB}
-                                        // onChange={handleChange}
+                                        checked={etopics.homework === '' ? false : true}
+                                        onChange={(event, value) => { handleChangeEtopics('homework', value) }}
                                         name="homework"
                                         color="primary"
                                       />
@@ -528,6 +689,8 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                                   color="secondary"
                                   variant="contained"
                                   className={classes.button}
+                                  disabled={topicsvalidate}
+                                  onClick={handleAddTopics}
                                 >
                                   Add
                                 </Button>
@@ -535,6 +698,8 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                                   color="secondary"
                                   variant="contained"
                                   className={classes.button}
+                                  disabled={topicseditvalidate}
+                                  onClick={handleEditTopics}
                                 >
                                   Edit
                                 </Button>
@@ -542,6 +707,8 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                                   color="secondary"
                                   variant="contained"
                                   className={classes.button}
+                                  disabled={topicsdelvalidate}
+                                  onClick={handleDelTopics}
                                 >
                                   Delete
                                 </Button>
@@ -556,12 +723,15 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                                       </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                      {/* {rows.map((row) => ( */}
-                                      <StyledTableRow>
-                                        <StyledTableCell className={classes.ellipsis}>speaking practice (describe a relationship)</StyledTableCell>
-                                        <StyledTableCell></StyledTableCell>
-                                      </StyledTableRow>
-                                      {/* ))} */}
+                                      {state_topics.map((row, index) => (
+                                        <StyledTableRow key={row.index}
+                                          style={{ cursor: 'pointer' }}
+                                          onClick={() => { handleChangeEtopicsEdit(row) }}
+                                        >
+                                          <StyledTableCell className={classes.ellipsis} key={row.index + 1}>{row.name}</StyledTableCell>
+                                          <StyledTableCell key={row.index + 2}>{row.homework}</StyledTableCell>
+                                        </StyledTableRow>
+                                      ))}
                                     </TableBody>
                                   </Table>
                                 </TableContainer>
@@ -574,16 +744,14 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                             </div>
                             <Grid container>
                               <Grid item md={8} xs={12}>
-                                <CssTextField
-                                  id="textbooks_input"
-                                  style={{ height: 50 }}
-                                />
                                 <Autocomplete
                                   id="textbooks"
-                                  options={global.textbooks}
-                                  getOptionLabel={(option) => option}
+                                  options={global.Alllessontextbooks}
+                                  getOptionLabel={(option) => option.textBookName}
                                   style={{ width: '100%', height: 50 }}
                                   renderInput={(params) => <CssTextField {...params} />}
+                                  value={etextbooks}
+                                  onChange={(event, value) => { handleChangeEtextbook('textBookName', value) }}
                                 />
                                 <div style={{ width: '100%', display: 'flex' }}>
                                   <div className={classes.input_container} style={{ marginRight: 15 }}>
@@ -591,7 +759,8 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                                     <CssTextField
                                       id="unit"
                                       style={{ height: 50 }}
-                                    // value={phone}
+                                      value={etextbooks.unit}
+                                      onChange={(e) => { handleChangeEtextbook('unit', e.target.value) }}
                                     />
                                   </div>
                                   <div className={classes.input_container}>
@@ -599,7 +768,8 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                                     <CssTextField
                                       id="pages"
                                       style={{ height: 50 }}
-                                    // value={phone}
+                                      value={etextbooks.pages}
+                                      onChange={(e) => { handleChangeEtextbook('pages', e.target.value) }}
                                     />
                                   </div>
                                 </div>
@@ -609,15 +779,16 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                                     <CssTextField
                                       id="exercise"
                                       style={{ height: 50 }}
-                                    // value={phone}
+                                      value={etextbooks.exercise}
+                                      onChange={(e) => { handleChangeEtextbook('exercise', e.target.value) }}
                                     />
                                   </div>
                                   <div className={classes.input_container}>
                                     <FormControlLabel
                                       control={
                                         <Checkbox
-                                          // checked={state.checkedB}
-                                          // onChange={handleChange}
+                                          checked={etextbooks.homework === '' ? false : true}
+                                          onChange={(event, value) => { handleChangeEtextbook('homework', value) }}
                                           name="homework"
                                           color="primary"
                                         />
@@ -632,6 +803,8 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                                   color="secondary"
                                   variant="contained"
                                   className={classes.button}
+                                  disabled={textbookvalidate}
+                                  onClick={handleAddTextbooks}
                                 >
                                   Add
                                 </Button>
@@ -639,6 +812,8 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                                   color="secondary"
                                   variant="contained"
                                   className={classes.button}
+                                  disabled={textbookeditvalidate}
+                                  onClick={handleEditEtextbook}
                                 >
                                   Edit
                                 </Button>
@@ -646,6 +821,8 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                                   color="secondary"
                                   variant="contained"
                                   className={classes.button}
+                                  disabled={textbookdelvalidate}
+                                  onClick={handleDelEtextbook}
                                 >
                                   Delete
                                 </Button>
@@ -664,15 +841,18 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                                   </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                  {/* {rows.map((row) => ( */}
-                                  <StyledTableRow>
-                                    <StyledTableCell className={classes.ellipsis}>EF4 Elem (digital)</StyledTableCell>
-                                    <StyledTableCell>8B</StyledTableCell>
-                                    <StyledTableCell>65</StyledTableCell>
-                                    <StyledTableCell>6a-c</StyledTableCell>
-                                    <StyledTableCell>x</StyledTableCell>
-                                  </StyledTableRow>
-                                  {/* ))} */}
+                                  {state_textbooks.map((row, index) => (
+                                    <StyledTableRow key={index}
+                                      style={{ cursor: 'pointer' }}
+                                      onClick={() => { handleChangeEtextbookEdit(row) }}
+                                    >
+                                      <StyledTableCell className={classes.ellipsis} key={row.index + 1}>{row.textBookName}</StyledTableCell>
+                                      <StyledTableCell key={row.index + 2}>{row.unit}</StyledTableCell>
+                                      <StyledTableCell key={row.index + 3}>{row.pages}</StyledTableCell>
+                                      <StyledTableCell key={row.index + 4}>{row.exercise}</StyledTableCell>
+                                      <StyledTableCell key={row.index + 5}>{row.homework}</StyledTableCell>
+                                    </StyledTableRow>
+                                  ))}
                                 </TableBody>
                               </Table>
                             </TableContainer>
@@ -685,9 +865,10 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                       <div className={classes.input_container} style={{ width: 'initial' }}>
                         <div className={classes.boldletter} style={{ textAlign: 'initial', marginRight: 15 }}>Search:</div>
                         <CssTextField
-                          id="search"
+                          id="name"
                           style={{ height: 50 }}
-                        // value={phone}
+                          value={searchVal.name}
+                          onChange={(e) => handleChangeSearchVal('name', e)}
                         />
                       </div>
 
@@ -695,8 +876,10 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                         control={
                           <Checkbox
                             color="primary"
-                            name="contact"
+                            name="active"
                             style={{ marginLeft: 15 }}
+                            checked={searchVal.active}
+                            onChange={(event, value) => { handleChangeSearchVal('active', value) }}
                           />
                         }
                         label="Only Active"
@@ -704,7 +887,7 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                     </div>
                     <Grid container alignItems="center" className={classes.transfer_root}>
                       <Grid item md={5} xs={12}>
-                        {customList('Choices', left)}
+                        {customList(leftStudents)}
                       </Grid>
                       <Grid item md={2} xs={12}>
                         <Grid container direction="column" alignItems="center">
@@ -714,7 +897,7 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                             variant="contained"
                             className={classes.button}
                             onClick={handleCheckedRight}
-                            disabled={leftChecked.length === 0}
+                            disabled={studentsleftChecked.length === 0}
                             aria-label="move selected right"
                           >
                             Add &gt;&gt;
@@ -724,7 +907,7 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                             variant="contained"
                             className={classes.button}
                             onClick={handleCheckedLeft}
-                            disabled={rightChecked.length === 0}
+                            disabled={studentsrightChecked.length === 0}
                             aria-label="move selected left"
                           >
                             Remove
@@ -732,7 +915,7 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                         </Grid>
                       </Grid>
                       <Grid item md={5} xs={12}>
-                        {customList('Chosen', right)}
+                        {customList(rightStudnets)}
                       </Grid>
                     </Grid>
                     <div style={{ textAlign: 'right' }}>
@@ -748,6 +931,7 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
                         color="secondary"
                         variant="contained"
                         style={{ margin: 5 }}
+                        type="submit"
                       >
                         Save
                       </Button>
@@ -765,7 +949,10 @@ const LessonAddEditForm = ({ lesson, update, intl }) => {
 
 LessonAddEditForm.propTypes = {
   update: PropTypes.bool,
-  lesson: PropTypes.array,
+  lesson: PropTypes.object,
+  textbooks: PropTypes.array,
+  students: PropTypes.array,
+  topics: PropTypes.array,
   className: PropTypes.string,
 };
 

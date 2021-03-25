@@ -106,7 +106,7 @@ const NavBar = ({ onMobileClose, openMobile, intl, language }) => {
           items: [
             {
               title: formatMessage(intl.edit),
-              href: formatMessage(intl.urlMoreEdit),
+              href: formatMessage(intl.urlMoreEditTopic),
             },
             {
               title: formatMessage(intl.log),
@@ -162,7 +162,7 @@ const NavBar = ({ onMobileClose, openMobile, intl, language }) => {
     //     }
     //   ]
     // },
-    
+
   ];
 
   useEffect(() => {

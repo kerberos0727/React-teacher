@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import FilterListIcon from '@material-ui/icons/FilterList';
+import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
 import { Link as RouterLink } from 'react-router-dom';
@@ -12,14 +11,11 @@ import {
   SvgIcon,
   Checkbox,
   TableRow,
-  useTheme,
   TableBody,
   TableCell,
   TableHead,
-  TextField,
   makeStyles,
   IconButton,
-  InputAdornment,
   TablePagination,
   withStyles
 } from '@material-ui/core';
@@ -41,9 +37,6 @@ import {
   sortOptionsDefault,
   handleDeleteAllSelected,
 } from 'src/utils/defaultTableSettings';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
 /* connectIntl */
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
 import FixedTextField from 'src/components/FixedTextField'
@@ -77,7 +70,7 @@ const CssTextField = withStyles({
     '& .MuiOutlinedInput-root': {
       '& fieldset': {
         border: '1px solid#333',
-        borderRadius: '19px',
+        borderRadius: '5px',
         height: 50
       },
       '&:hover fieldset': {
@@ -133,7 +126,7 @@ const useStyles = makeStyles((theme) => ({
   },
   width150: {
     height: 50,
-    width: 150,
+    width: 250,
     marginRight: 20,
     "@media (max-width: 661px)": { width: '200px !important' }
   }
@@ -146,9 +139,9 @@ const Results = ({
   className,
   deleteStudent,
   deleteStudents,
-  handleGetData
+  handleGetData,
+  handleSearchData,
 }) => {
-  const theme = useTheme();
   const classes = useStyles();
   const [filters] = useState({});
   const [page, setPage] = useState(0);
@@ -158,11 +151,145 @@ const Results = ({
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [sort, setSort] = useState(sortOptionsDefault[2].value);
   const [switchstate, setSwitchState] = React.useState(true);
-  const [filteropen, setFilterOpen] = React.useState(false);
-  const [selectedDate, setSelectedDate] = React.useState(new Date());
+  const [searchVals, setSearchvals] = React.useState({
+    name: '',
+    postcode: '',
+    level: '',
+    enrolled: '',
+    group: '',
+    heard: '',
+    active: false,
+    inactive: false,
+    finished: false,
+    idle: false,
+    pending: false
+  });
+  const [level, setLevel] = React.useState('')
+  const [group, setGroup] = React.useState('')
+  const [heard, setHeard] = React.useState('')
 
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
+  const [weekVals, setWeekvals] = React.useState({
+    monday: false,
+    tuesday: false,
+    wednesday: false,
+    thursday: false,
+    friday: false,
+    saturday: false
+  });
+
+  useEffect(() => {
+    let data = { searchVals: searchVals, daysofweekNum: handlegetWeekdays(), pagenum: 0, limitnum: 10 }
+    // if (searchVals.name !== '' || searchVals.postcode !== '' || searchVals.level !== '' || searchVals.enrolled !== '' || searchVals.group !== '' || searchVals.heard !== '' || searchVals.pending !== false || handlegetWeekdays() !== 0) {
+    //   handleSearchData(data);
+    //   console.log('handleSearchData(data)')
+    // }
+    if (searchVals.name === '' && searchVals.postcode === '' && searchVals.level === '' && searchVals.enrolled === '' && searchVals.group === '' && searchVals.heard === '' && searchVals.pending === false && handlegetWeekdays() === 0 && searchVals.active === false && searchVals.inactive === false && searchVals.finished === false && searchVals.idle === false && weekVals.monday === false && weekVals.tuesday === false && weekVals.wednesday === false && weekVals.thursday === false && weekVals.friday === false && weekVals.saturday === false) {
+      handleGetData(0, 10)
+    }
+    handleSearchData(data);
+  }, [searchVals, weekVals])
+
+  const handleChangeWeekvals = (name, value) => {
+    setWeekvals({ ...weekVals, [name]: value });
+  };
+
+  const handlegetWeekdays = () => {
+    let daysofweekNum = 0;
+    if (weekVals.monday) {
+      daysofweekNum += 16;
+    }
+    if (weekVals.tuesday) {
+      daysofweekNum += 8;
+    }
+    if (weekVals.wednesday) {
+      daysofweekNum += 4;
+    }
+    if (weekVals.thursday) {
+      daysofweekNum += 2;
+    }
+    if (weekVals.friday) {
+      daysofweekNum += 1;
+    }
+    if (weekVals.saturday) {
+      daysofweekNum = 32;
+    }
+
+    return daysofweekNum;
+  }
+
+  const handleChangeSearchvals = (name, value) => {
+    let newdata = { ...searchVals }
+    switch (name) {
+      case 'name':
+        newdata.name = value.target.value;
+        break;
+      case 'postcode':
+        newdata.postcode = value.target.value;
+        break;
+      case 'enrolled':
+        newdata.enrolled = value;
+        break;
+      case 'active':
+        newdata.active = value;
+        newdata.inactive = false;
+        break;
+      case 'inactive':
+        newdata.active = false;
+        newdata.finished = false;
+        newdata.idle = false;
+        newdata.inactive = value;
+        break;
+      case 'finished':
+        newdata.active = true;
+        newdata.inactive = false;
+        newdata.finished = value;
+        break;
+      case 'idle':
+        newdata.active = true;
+        newdata.inactive = false;
+        newdata.idle = value;
+        break;
+      case 'pending':
+        newdata.pending = value;
+        break;
+      case 'level':
+        let data = global.Allclassis;
+        if (value !== null) {
+          for (let i = 0; i < data.length; i++) {
+            if (data[i].name === value) {
+              setLevel(value);
+              newdata.level = data[i].id
+            }
+          }
+        } else
+          newdata.level = ''
+        break;
+      case 'group':
+        let groupdata = global.Allgroups;
+        if (value !== null) {
+          for (let i = 0; i < groupdata.length; i++) {
+            if (groupdata[i].name === value) {
+              setGroup(value);
+              newdata.group = groupdata[i].id;
+            }
+          }
+        } else
+          newdata.group = '';
+        break;
+      case 'heard':
+        let hearddata = global.Allhowdidyouhear;
+        if (value !== null) {
+          for (let i = 0; i < hearddata.length; i++) {
+            if (hearddata[i].name === value) {
+              setHeard(value);
+              newdata.heard = hearddata[i].id
+            }
+          }
+        } else
+          newdata.heard = ''
+        break;
+    }
+    setSearchvals(newdata)
   };
 
   const handleChangeSwitchState = (event) => {
@@ -189,12 +316,20 @@ const Results = ({
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
-    handleGetData(parseInt(newPage + '0'), limit);
+    let data = { searchVals: searchVals, daysofweekNum: handlegetWeekdays(), pagenum: parseInt(newPage + '0'), limitnum: limit }
+    if (searchVals.name !== '' || searchVals.postcode !== '' || searchVals.level !== '' || searchVals.enrolled !== '' || searchVals.group !== '' || searchVals.heard !== '' || searchVals.pending !== false || handlegetWeekdays() !== 0)
+      handleSearchData(data);
+    else
+      handleGetData(parseInt(newPage + '0'), limit);
   };
 
   const handleLimitChange = (event) => {
     setLimit(parseInt(event.target.value));
-    handleGetData(page, event.target.value);
+    let data = { searchVals: searchVals, daysofweekNum: handlegetWeekdays(), pagenum: page, imitnum: event.target.value }
+    if (searchVals.name !== '' || searchVals.postcode !== '' || searchVals.level !== '' || searchVals.enrolled !== '' || searchVals.group !== '' || searchVals.heard !== '' || searchVals.pending !== false || handlegetWeekdays() !== 0)
+      handleSearchData(data);
+    else
+      handleGetData(page, event.target.value);
   };
 
   const handleLefthours = (max, useal) => {
@@ -252,209 +387,208 @@ const Results = ({
   const selectedAllStudents = selectedStudents.length === students.length;
 
   return (
-    <Card className={clsx(classes.root, className)} >
-      <div>
-        <Dialog
-          open={filteropen}
-          onClose={() => { setFilterOpen(false) }}
-          aria-labelledby="alert-dialog-title"
-          aria-describedby="alert-dialog-description"
-        >
-          {/* <DialogTitle id="alert-dialog-title">{"Use Google's location service?"}</DialogTitle> */}
-          <DialogContent>
-            <div id="alert-dialog-description">
-              <div className={classes.row_container}>
-                <div className={classes.rowDiv}>
-                  <div className={classes.boldletter}>Search students:</div>
-                  <CssTextField
-                    name="searchVal"
-                    className={classes.width150}
-                  />
-                </div>
-                <div className={classes.rowDiv}>
-                  <div className={classes.boldletter}>Postcode:</div>
-                  <CssTextField
-                    name="postcode"
-                    className={classes.width150}
-                    style={{ width: 100 }}
-                  />
-                </div>
-              </div>
-
-              <div className={classes.row_container}>
-                <div className={classes.rowDiv}>
-                  <div className={classes.boldletter}>Level:</div>
-                  <Autocomplete
-                    id="level"
-                    options={global.classis}
-                    getOptionLabel={(option) => option}
-                    className={classes.width150}
-                    renderInput={(params) => <CssTextField {...params} />}
-                  />
-                </div>
-                <div className={classes.rowDiv}>
-                  <div className={classes.boldletter}>enrolled since:</div>
-                  <KeyboardDatePicker
-                    format="MM/DD/YYYY"
-                    name="startdate"
-                    value={selectedDate}
-                    className={classes.width150}
-                    onChange={handleDateChange}
-                  />
-                </div>
-              </div>
-
-              <div className={classes.row_container}>
-                <div className={classes.rowDiv}>
-                  <div className={classes.boldletter}>Group:</div>
-                  <Autocomplete
-                    id="group"
-                    options={global.groups}
-                    getOptionLabel={(option) => option}
-                    className={classes.width150}
-                    renderInput={(params) => <CssTextField {...params} />}
-                  />
-                </div>
-                <div className={classes.rowDiv}>
-                  <div className={classes.boldletter}>Heard of us:</div>
-                  <Autocomplete
-                    id="heard"
-                    options={global.howdidyouhear}
-                    getOptionLabel={(option) => option}
-                    className={classes.width150}
-                    renderInput={(params) => <CssTextField {...params} />}
-                  />
-                </div>
-              </div>
-              <div className={classes.row_container}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      name="active"
-                      color="primary"
-                    />
-                  }
-                  label="Active"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      name="inactive"
-                      color="primary"
-                    />
-                  }
-                  label="Inactive"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      name="finished"
-                      color="primary"
-                    />
-                  }
-                  label="Finished"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      name="idle"
-                      color="primary"
-                    />
-                  }
-                  label="Idle"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      name="mon"
-                      color="primary"
-                    />
-                  }
-                  label="Mon"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      name="tue"
-                      color="primary"
-                    />
-                  }
-                  label="Tue"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      name="wed"
-                      color="primary"
-                    />
-                  }
-                  label="Wed"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      name="thu"
-                      color="primary"
-                    />
-                  }
-                  label="Thur"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      name="fri"
-                      color="primary"
-                    />
-                  }
-                  label="Fri"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      name="sat"
-                      color="primary"
-                    />
-                  }
-                  label="Sat"
-                />
-              </div>
-            </div>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => { setFilterOpen(false) }} color="primary">
-              Disagree
-            </Button>
-            <Button onClick={() => { setFilterOpen(false) }} color="primary">
-              Agree
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </div>
+    <Card className={clsx(classes.root, className)}>
       <Box p={2} minHeight={56} display="flex" alignItems="center" justifyContent='space-between' >
-        <TextField
-          className={classes.queryField}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SvgIcon
-                  fontSize="small"
-                  color="action"
-                >
-                  <SearchIcon />
-                </SvgIcon>
-              </InputAdornment>
-            )
-          }}
-          value={query}
-          variant="outlined"
-          onChange={handleQueryChange}
-          placeholder={formatMessage(intl.search)}
-        />
-        <FilterListIcon
-          style={{ cursor: 'pointer' }}
-          onClick={() => { setFilterOpen(true) }}
-          title="Filter"
-        />
+        <div id="alert-dialog-description">
+          <div className={classes.row_container}>
+            <div className={classes.rowDiv}>
+              <div className={classes.boldletter}>Search students:</div>
+              <CssTextField
+                name="searchVal"
+                className={classes.width150}
+                variant="outlined"
+                value={searchVals.name}
+                onChange={(e) => handleChangeSearchvals('name', e)}
+              />
+            </div>
+            <div className={classes.rowDiv}>
+              <div className={classes.boldletter}>Postcode:</div>
+              <CssTextField
+                name="postcode"
+                className={classes.width150}
+                style={{ width: 100 }}
+                variant="outlined"
+                value={searchVals.postcode}
+                onChange={(e) => handleChangeSearchvals('postcode', e)}
+              />
+            </div>
+          </div>
+
+          <div className={classes.row_container}>
+            <div className={classes.rowDiv}>
+              <div className={classes.boldletter}>Level:</div>
+              <Autocomplete
+                id="level"
+                options={global.classis}
+                getOptionLabel={(option) => option}
+                className={classes.width150}
+                renderInput={(params) => <CssTextField {...params} variant="outlined" />}
+                value={level}
+                onChange={(event, value) => { handleChangeSearchvals('level', value) }}
+              />
+            </div>
+            <div className={classes.rowDiv}>
+              <div className={classes.boldletter}>enrolled since:</div>
+              <KeyboardDatePicker
+                format="MM/DD/YYYY"
+                name="startdate"
+                className={classes.width150}
+                value={searchVals.enrolled}
+                onChange={(date) => handleChangeSearchvals('enrolled', date)}
+              />
+            </div>
+          </div>
+
+          <div className={classes.row_container}>
+            <div className={classes.rowDiv}>
+              <div className={classes.boldletter}>Group:</div>
+              <Autocomplete
+                id="group"
+                options={global.groups}
+                getOptionLabel={(option) => option}
+                className={classes.width150}
+                renderInput={(params) => <CssTextField {...params} variant="outlined" />}
+                value={group}
+                onChange={(event, value) => { handleChangeSearchvals('group', value) }}
+              />
+            </div>
+            <div className={classes.rowDiv}>
+              <div className={classes.boldletter}>Heard of us:</div>
+              <Autocomplete
+                id="heard"
+                options={global.howdidyouhear}
+                getOptionLabel={(option) => option}
+                className={classes.width150}
+                renderInput={(params) => <CssTextField {...params} variant="outlined" />}
+                value={heard}
+                onChange={(event, value) => { handleChangeSearchvals('heard', value) }}
+              />
+            </div>
+          </div>
+          <div className={classes.row_container}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="active"
+                  color="primary"
+                  onChange={() => { handleChangeSearchvals("active", !searchVals.active) }}
+                  checked={searchVals.active}
+                />
+              }
+              label="Active"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="inactive"
+                  color="primary"
+                  onChange={() => { handleChangeSearchvals("inactive", !searchVals.inactive) }}
+                  checked={searchVals.inactive}
+                />
+              }
+              label="Inactive"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="finished"
+                  color="primary"
+                  onChange={() => { handleChangeSearchvals("finished", !searchVals.finished) }}
+                  checked={searchVals.finished}
+                />
+              }
+              label="Finished"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="idle"
+                  color="primary"
+                  onChange={() => { handleChangeSearchvals("idle", !searchVals.idle) }}
+                  checked={searchVals.idle}
+                />
+              }
+              label="Idle"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="mon"
+                  color="primary"
+                  onChange={() => { handleChangeWeekvals("monday", !weekVals.monday) }}
+                  checked={weekVals.monday}
+                />
+              }
+              label="Mon"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="tue"
+                  color="primary"
+                  onChange={() => { handleChangeWeekvals("tuesday", !weekVals.tuesday) }}
+                  checked={weekVals.tuesday}
+                />
+              }
+              label="Tue"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="wed"
+                  color="primary"
+                  onChange={() => { handleChangeWeekvals("wednesday", !weekVals.wednesday) }}
+                  checked={weekVals.wednesday}
+                />
+              }
+              label="Wed"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="thu"
+                  color="primary"
+                  onChange={() => { handleChangeWeekvals("thursday", !weekVals.thursday) }}
+                  checked={weekVals.thursday}
+                />
+              }
+              label="Thur"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="fri"
+                  color="primary"
+                  onChange={() => { handleChangeWeekvals("friday", !weekVals.friday) }}
+                  checked={weekVals.friday}
+                />
+              }
+              label="Fri"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="sat"
+                  color="primary"
+                  onChange={() => { handleChangeWeekvals("saturday", !weekVals.saturday) }}
+                  checked={weekVals.saturday}
+                />
+              }
+              label="Sat"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="pending"
+                  color="primary"
+                  onChange={() => { handleChangeSearchvals("pending", !searchVals.pending) }}
+                  checked={searchVals.pending}
+                />
+              }
+              label="payment pending"
+            />
+          </div>
+        </div>
       </Box>
       {enableBulkOperations && (
         <div className={classes.bulkOperations}>
@@ -502,11 +636,11 @@ const Results = ({
                 </TableCell>
 
                 <TableCell align="center">
-                  Hours Left
+                  {searchVals.active ? 'Hours left' : 'Level'}
                 </TableCell>
 
                 <TableCell align="center">
-                  Days Left
+                  {searchVals.active ? 'Days left' : 'End Date'}
                 </TableCell>
 
                 <TableCell align="center">
@@ -541,11 +675,11 @@ const Results = ({
                     </TableCell>
 
                     <TableCell align="center">
-                      {handleLefthours(n.maxHours, n.usualHour)}
+                      {searchVals.active ? n.hoursLeft : n.LEVEL}
                     </TableCell>
 
-                    <TableCell align="center" style={handelLeftdays(n.endDate) < 10 && handelLeftdays(n.endDate) >= 0 ? { color: '#ef4f1f' } : handelLeftdays(n.endDate) < 0 ? { color: '#ff0000' } : { color: '#0b9a09' }}>
-                      {handelLeftdays(n.endDate)}
+                    <TableCell align="center" style={n.endDate < 10 && n.endDate >= 0 ? { color: '#ef4f1f' } : n.endDate < 0 ? { color: '#ff0000' } : { color: '#0b9a09' }}>
+                      {searchVals.active ? n.daysLeft : n.endDate}
                     </TableCell>
 
                     <TableCell align="center">

@@ -47,7 +47,7 @@ import TextField from '@material-ui/core/TextField';
 import httpClient from 'src/utils/httpClient';
 import 'src/components/global';
 /* connectIntl */
-import { connectIntl } from 'src/contexts/Intl';
+import { connectIntl, formatMessage } from 'src/contexts/Intl';
 
 var arrGroupinfo;
 
@@ -553,7 +553,7 @@ const StudentAddEditForm = ({ student, update, intl }) => {
       await setGroupRight(arrGroupinfo)
     }
   });
-  
+
   const handlegetWeekStatus = (daysOfWeek) => {
     if (daysOfWeek & 16) {
       setMonday(true)
@@ -583,7 +583,7 @@ const StudentAddEditForm = ({ student, update, intl }) => {
     console.log('student-->', student)
     console.log('student-->', selectedGroups)
     console.log('student-->', textbookright)
-  }, [getAllinfos, handlegetWeekStatus, getGroupsstudentids, getTextbookinfo]);
+  }, [getAllinfos]);
 
   const handlegetAddress = (address) => {
     var res = '';
@@ -697,9 +697,6 @@ const StudentAddEditForm = ({ student, update, intl }) => {
       initialValues={{
         firstName: student.firstName || '',
         lastName: student.lastName || '',
-        // language: student.LANGUAGE || '',
-        // level: student.LEVEL || '',
-        // howdidYouHeardid: student.howDidYouHear || '',
         enrolled: student.enrolled || new Date(),
         tel: student.tel || '',
         tel2: student.tel2 || '',
@@ -720,12 +717,6 @@ const StudentAddEditForm = ({ student, update, intl }) => {
         maxHours: student.maxHours || '',
         renewing: student.isActive ? handlegetRenewing(student.isActive) : '' || '',
         paymentpending: student.pending === 'Y' ? true : false || false,
-
-        // selectedGroups: student.id ? getGroupsstudentids() : [] || '',
-        // description: student.description || '',
-        // promoted_to_home: Boolean(student.promoted_to_home) || false,
-        // expires: Boolean(student.expires) || false,
-        // published: Boolean(student.published) || false,
       }}
       onSubmit={
         async (values, { setErrors }) => {
@@ -766,18 +757,21 @@ const StudentAddEditForm = ({ student, update, intl }) => {
                             console.log('senddata--->', senddata)
                             const url = `api/student/${(update) ? 'update' : 'create'}`
                             const method = (update) ? 'put' : 'post';
-                            // httpClient.put(`api/student/update`, {
-                            //   data: senddata
-                            // })
                             httpClient[method](url, senddata)
                               .then(json => {
                                 setSelectedgroups(groupright)
                                 setOldTextbookRight(textbookright)
                                 if (json.success && isMountedRef.current) {
-                                  enqueueSnackbar("Updated successfully", {
-                                    variant: 'success',
-                                  })
+                                  enqueueSnackbar(
+                                    formatMessage(intl[(update) ? 'Updated successfully' : 'Added successfully']),
+                                    { variant: 'success' }
+                                  )
                                 }
+                                else
+                                  enqueueSnackbar(
+                                    formatMessage('FAILD'),
+                                    { variant: 'error' }
+                                  )
                               })
                               .catch((error) => {
                                 console.log(error);
@@ -1485,12 +1479,6 @@ const StudentAddEditForm = ({ student, update, intl }) => {
 StudentAddEditForm.propTypes = {
   update: PropTypes.bool,
   student: PropTypes.object,
-  // classis: PropTypes.array,
-  // languages: PropTypes.array,
-  // groups: PropTypes.array,
-  // textbooks: PropTypes.array,
-  // howdidyouhears: PropTypes.array,
-  // className: PropTypes.string,
 };
 
 StudentAddEditForm.defaultProps = {

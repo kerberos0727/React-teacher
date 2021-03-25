@@ -197,7 +197,8 @@ const routes = [
         path: {
           value: 'urlLessonEdit',
           params: {
-            lessonId: ':lessonId'
+            lessonId: ':lessonId',
+            topicsName: ':topicsName'
           }
         },
         component: lazy(() => import('src/views/lessons/EditView'))
@@ -208,7 +209,8 @@ const routes = [
         path: {
           value: 'urlLessonDetail',
           params: {
-            lessonId: ':lessonId'
+            lessonId: ':lessonId',
+            topicsName: ':topicsName'
           }
         },
         component: lazy(() => import('src/views/lessons/DetailsView'))
@@ -275,120 +277,197 @@ const routes = [
         component: lazy(() => import('src/views/groups/EditView'))
       },
       // groups end
-      // {
-      // 	exact: true,
-      // 	multilanguage: true,
-      // 	path: 'urlProfile',
-      // 	component: lazy(() => import('src/views/profile'))
-      // },
-      // {
-      // 	exact: true,
-      // 	multilanguage: true,
-      // 	path: 'urlProduct',
-      // 	component: lazy(() => import('src/views/product'))
-      // },
-      // {
-      // 	exact: true,
-      // 	multilanguage: true,
-      // 	path: 'urlLicense',
-      // 	component: lazy(() => import('src/views/licenses/LicensesListView'))
-      // },
-      // {
-      // 	exact: true,
-      // 	multilanguage: true,
-      // 	path: 'urlAppbalance',
-      // 	component: lazy(() => import('src/views/balance/balanceListView'))
-      // },
-      // {
-      // 	exact: true,
-      // 	multilanguage: true,
-      // 	path: 'urlAppwithdrawal',
-      // 	component: lazy(() => import('src/views/withdrawl/withdrawalListView'))
-      // },
-      // {
-      // 	exact: true,
-      // 	multilanguage: true,
-      // 	path: 'urlAppaffiliate',
-      // 	component: lazy(() => import('src/views/affiliates/affiliateListView'))
-      // },
-      // {
-      // 	exact: true,
-      // 	multilanguage: true,
-      // 	path: 'urlAppmarketing',
-      // 	component: lazy(() => import('src/views/marketing/marketingListView'))
-      // },
-      // {
-      // 	exact: true,
-      // 	multilanguage: true,
-      // 	path: 'urlAppoperation',
-      // 	component: lazy(() => import('src/views/operations/operationListView'))
-      // },
-      // {
-      // 	exact: true,
-      // 	multilanguage: true,
-      // 	path: 'urlAppsupport',
-      // 	component: lazy(() => import('src/views/support/supportListView'))
-      // },
-      // {
-      // 	exact: true,
-      // 	multilanguage: true,
-      // 	path: 'urlApplegal',
-      // 	component: lazy(() => import('src/views/legal/legalListView'))
-      // },
-      // {
-      // 	exact: true,
-      // 	multilanguage: true,
-      // 	path: 'urlBotcontrol',
-      // 	component: lazy(() => import('src/views/bot/control/Control'))
-      // },
-      // {
-      // 	exact: true,
-      // 	multilanguage: true,
-      // 	path: 'urlBottickers',
-      // 	component: lazy(() => import('src/views/bot/tickers/Tickers'))
-      // },
-      // {
-      // 	exact: true,
-      // 	multilanguage: true,
-      // 	path: 'urlBotopportunity',
-      // 	component: lazy(() => import('src/views/bot/opportunity/Opportunity'))
-      // },
-      // {
-      // 	exact: true,
-      // 	multilanguage: true,
-      // 	path: 'urlBotoppcertification',
-      // 	component: lazy(() => import('src/views/bot/oppCertification/OppCertification'))
-      // },
-      // {
-      // 	exact: true,
-      // 	multilanguage: true,
-      // 	path: 'urlBotresults',
-      // 	component: lazy(() => import('src/views/bot/results/Results'))
-      // },
-      // {
-      // 	exact: true,
-      // 	multilanguage: true,
-      // 	path: 'urlBotresultscertification',
-      // 	component: lazy(() => import('src/views/bot/resultCertification/ResultCertification'))
-      // },
-      // {
-      // 	exact: true,
-      // 	multilanguage: true,
-      // 	path: 'urlBotmlresult',
-      // 	component: lazy(() => import('src/views/bot/ml_result/ML_result'))
-      // },
-      // {
-      // 	exact: true,
-      // 	multilanguage: true,
-      // 	path: 'urlBotmainnetresults',
-      // 	component: lazy(() => import('src/views/bot/mainnetResultsCertification/MainnetResultsCertification'))
-      // },
-      // {
-      // 	exact: true,
-      // 	multilanguage: true,
-      // 	path: 'urlBotmannetopportunities',
-      // 	component: lazy(() => import('src/views/bot/mainnetOpportunitiesCertification/MainnetOpportunitiesCertification'))
-      // },
+
+      // teacher start
+      {
+        exact: true,
+        multilanguage: true,
+        path: 'urlTeachers',
+        component: lazy(() => import('src/views/teachers/ListView'))
+      },
+      {
+        exact: true,
+        multilanguage: true,
+        path: 'urlTeacherAdd',
+        component: lazy(() => import('src/views/teachers/AddView'))
+      },
+      {
+        exact: true,
+        multilanguage: true,
+        path: {
+          value: 'urlTeacherEdit',
+          params: {
+            teacherId: ':teacherId'
+          }
+        },
+        component: lazy(() => import('src/views/teachers/EditView'))
+      },
+      {
+        exact: true,
+        multilanguage: true,
+        path: {
+          value: 'urlTeacherDetail',
+          params: {
+            teacherId: ':teacherId'
+          }
+        },
+        component: lazy(() => import('src/views/teachers/DetailsView'))
+      },
+      // teacher end
+
+      // textbook start
+      {
+        exact: true,
+        multilanguage: true,
+        path: 'urlTextbooks',
+        component: lazy(() => import('src/views/textbooks/ListView'))
+      },
+      {
+        exact: true,
+        multilanguage: true,
+        path: {
+          value: 'urlTextbookDetail',
+          params: {
+            textbookId: ':textbookId'
+          }
+        },
+        component: lazy(() => import('src/views/textbooks/DetailsView'))
+      },
+      {
+        exact: true,
+        multilanguage: true,
+        path: {
+          value: 'urlTextbookEdit',
+          params: {
+            textbookId: ':textbookId'
+          }
+        },
+        component: lazy(() => import('src/views/textbooks/EditView'))
+      },
+      {
+        exact: true,
+        multilanguage: true,
+        path: {
+          value: 'urlTextbookAdd',
+          params: {
+            textbookId: ':textbookId'
+          }
+        },
+        component: lazy(() => import('src/views/textbooks/AddView'))
+      },
+      // textbook end
+
+      // more_edit start
+      {
+        exact: true,
+        multilanguage: true,
+        path: 'urlMoreEditTopic',
+        component: lazy(() => import('src/views/More/Edit/Topic/ListView'))
+      },
+      {
+        exact: true,
+        multilanguage: true,
+        path: 'urlMoreEditTextbook',
+        component: lazy(() => import('src/views/More/Edit/Textbook/ListView'))
+      },
+      {
+        exact: true,
+        multilanguage: true,
+        path: 'urlMoreEditLevel',
+        component: lazy(() => import('src/views/More/Edit/Level/ListView'))
+      },
+      {
+        exact: true,
+        multilanguage: true,
+        path: 'urlMoreEditRoom',
+        component: lazy(() => import('src/views/More/Edit/Room/ListView'))
+      },
+      {
+        exact: true,
+        multilanguage: true,
+        path: 'urlMoreEditLanguage',
+        component: lazy(() => import('src/views/More/Edit/Language/ListView'))
+      },
+      {
+        exact: true,
+        multilanguage: true,
+        path: 'urlMoreEditLesson',
+        component: lazy(() => import('src/views/More/Edit/Lesson/ListView'))
+      },
+      {
+        exact: true,
+        multilanguage: true,
+        path: 'urlMoreEditHeard',
+        component: lazy(() => import('src/views/More/Edit/Heard/ListView'))
+      },
+      // more_edit end
+
+      // log start
+      {
+        exact: true,
+        multilanguage: true,
+        path: 'urlMoreLog',
+        component: lazy(() => import('src/views/More/Log/ListView'))
+      },
+      // log end
+
+      // start exams
+      {
+        exact: true,
+        multilanguage: true,
+        path: 'urlMoreExams',
+        component: lazy(() => import('src/views/More/Exams/ListView'))
+      },
+      {
+        exact: true,
+        multilanguage: true,
+        path: {
+          value: 'urlMoreExamsEdit',
+          params: {
+            itemId: ':itemId',
+            itemType: ':itemType'
+          }
+        },
+        component: lazy(() => import('src/views/More/Exams/EditView'))
+      },
+      {
+        exact: true,
+        multilanguage: true,
+        path: {
+          value: 'urlMoreExamsAdd',
+          params: {
+            itemType: ':itemType'
+          }
+        },
+        component: lazy(() => import('src/views/More/Exams/AddView'))
+      },
+      // end exams
+
+      // start contract
+      {
+        exact: true,
+        multilanguage: true,
+        path: 'urlMoreContracts',
+        component: lazy(() => import('src/views/More/Contracts/ListView'))
+      },
+      {
+        exact: true,
+        multilanguage: true,
+        path: 'urlContractAdd',
+        component: lazy(() => import('src/views/More/Contracts/AddView'))
+      },
+      {
+        exact: true,
+        multilanguage: true,
+        path: {
+          value: 'urlContractEdit',
+          params: {
+            contractId: ':contractId'
+          }
+        },
+        component: lazy(() => import('src/views/More/Contracts/EditView'))
+      },
+      // end contract
       // NEW ROUTER END
       {
         component: () => <Redirect to="/" />

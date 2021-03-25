@@ -2,7 +2,7 @@ import React from 'react';
 
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
-import StudentInfo from './StudentInfo';
+import StudentInfo from './Student_Info';
 import { Grid, makeStyles } from '@material-ui/core';
 
 const useStyles = makeStyles(() => ({

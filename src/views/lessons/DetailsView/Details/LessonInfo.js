@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
 import {
@@ -66,9 +66,8 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const LessonInfo = ({ lesson, intl }) => {
+const LessonInfo = ({ lesson, textbooks, students, intl }) => {
   const classes = useStyles();
-
   return (
     <Card className={clsx(classes.root)} >
       <CardHeader title={formatMessage(intl.lessonDetail)} />
@@ -77,29 +76,29 @@ const LessonInfo = ({ lesson, intl }) => {
         <Grid item xs={12} sm={6} style={{ padding: 15 }}>
           <div className={classes.rowDiv}>
             <div className={classes.boldletter}>Language:</div>
-            <div className={classes.nomalletter}>{lesson.language}</div>
+            <div className={classes.nomalletter}>{lesson.LANGUAGE}</div>
             <div className={classes.boldletter}>Date:</div>
-            <div className={classes.nomalletter}>{lesson.date}</div>
+            <div className={classes.nomalletter}>{lesson.lessonDate}</div>
           </div>
           <div className={classes.rowDiv}>
             <div className={classes.boldletter}>Start:</div>
-            <div className={classes.nomalletter}>{lesson.start}</div>
+            <div className={classes.nomalletter}>{lesson.startTime}</div>
             <div className={classes.boldletter}>Info:</div>
             <div className={classes.nomalletter}>{lesson.info}</div>
           </div>
           <div className={classes.rowDiv}>
             <div className={classes.boldletter}>Finish:</div>
-            <div className={classes.nomalletter}>{lesson.finish}</div>
+            <div className={classes.nomalletter}>{lesson.endTime}</div>
             <div className={classes.boldletter}>Duration:</div>
-            <div className={classes.nomalletter}>{lesson.duration}</div>
+            <div className={classes.nomalletter}>lesson.duration</div>
           </div>
           <div className={classes.rowDiv}>
             <div className={classes.boldletter}>Group:</div>
-            <div className={classes.nomalletter}>{lesson.group}</div>
+            <div className={classes.nomalletter}>{lesson.groupName}</div>
           </div>
           <div className={classes.rowDiv}>
             <div className={classes.boldletter}>Level:</div>
-            <div className={classes.nomalletter}>{lesson.level}</div>
+            <div className={classes.nomalletter}>{lesson.LEVEL}</div>
           </div>
           <div className={classes.rowDiv}>
             <div className={classes.boldletter}>Teacher:</div>
@@ -107,7 +106,7 @@ const LessonInfo = ({ lesson, intl }) => {
           </div>
           <div className={classes.rowDiv}>
             <div className={classes.boldletter}>Topics:</div>
-            <div className={classes.nomalletter}>{lesson.topics}</div>
+            <div className={classes.nomalletter}>{lesson.topicName}</div>
           </div>
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -123,13 +122,13 @@ const LessonInfo = ({ lesson, intl }) => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {lesson.textbook.map((row) => (
+                {textbooks.map((row) => (
                   <StyledTableRow key={row.id}>
-                    <StyledTableCell>{row.title}</StyledTableCell>
+                    <StyledTableCell>{row.textBookName}</StyledTableCell>
                     <StyledTableCell>{row.unit}</StyledTableCell>
                     <StyledTableCell>{row.pages}</StyledTableCell>
-                    <StyledTableCell>{row.ex}</StyledTableCell>
-                    <StyledTableCell>{row.hw}</StyledTableCell>
+                    <StyledTableCell>{row.exercise}</StyledTableCell>
+                    <StyledTableCell>{row.homework}</StyledTableCell>
                   </StyledTableRow>
                 ))}
               </TableBody>
@@ -145,10 +144,10 @@ const LessonInfo = ({ lesson, intl }) => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {lesson.students.map((row) => (
+                {students.map((row) => (
                   <StyledTableRow key={row.id}>
-                    <StyledTableCell>{row.first_name}</StyledTableCell>
-                    <StyledTableCell>{row.last_name}</StyledTableCell>
+                    <StyledTableCell>{row.firstName}</StyledTableCell>
+                    <StyledTableCell>{row.lastName}</StyledTableCell>
                   </StyledTableRow>
                 ))}
               </TableBody>
@@ -162,7 +161,9 @@ const LessonInfo = ({ lesson, intl }) => {
 
 LessonInfo.propTypes = {
   className: PropTypes.string,
-  lesson: PropTypes.object.isRequired
+  lesson: PropTypes.object.isRequired,
+  textbooks: PropTypes.object.isRequired,
+  students: PropTypes.object.isRequired
 };
 
 const mapStateToProps = (store) => ({

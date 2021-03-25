@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
+import FilterListIcon from '@material-ui/icons/FilterList';
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
 import { Link as RouterLink } from 'react-router-dom';
@@ -27,7 +27,14 @@ import {
   Search as SearchIcon
 } from 'react-feather';
 import { useSnackbar } from 'notistack';
-import HighlightOffIcon from '@material-ui/icons/HighlightOff';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import Grid from '@material-ui/core/Grid';
+import {
+  KeyboardDatePicker,
+} from '@material-ui/pickers';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
 
 /* utils */
 import {
@@ -68,6 +75,27 @@ const useStyles = makeStyles((theme) => ({
     height: 42,
     width: 42,
     marginRight: theme.spacing(1)
+  },
+  boldletter: {
+    fontWeight: 'bold',
+  },
+  row_container: {
+    width: '100%',
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    marginBottom: 25,
+    "@media (max-width: 599px)": { justifyContent: 'space-between' },
+  },
+  totalcontainer: {
+    display: 'flex',
+    alignItems: 'center',
+    "@media (max-width: 875px)": {
+      width: '100%',
+      justifyContent: 'space-around',
+      marginTop: 20
+    },
   }
 }));
 
@@ -89,6 +117,12 @@ const Results = ({
   const { enqueueSnackbar } = useSnackbar();
   const [selectedBills, setSelectedBills] = useState([]);
   const [sort, setSort] = useState(sortOptionsDefault[2].value);
+  const [filteropen, setFilterOpen] = React.useState(false);
+  const [selectedDate, setSelectedDate] = React.useState(new Date());
+
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+  };
 
   const handleQueryChange = (event) => {
     event.persist();
@@ -128,7 +162,128 @@ const Results = ({
 
   return (
     <Card className={clsx(classes.root, className)} >
-      <Box p={2} minHeight={56} display="flex" alignItems="center" >
+      <div>
+        <Dialog
+          open={filteropen}
+          onClose={() => { setFilterOpen(false) }}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogContent>
+            <Grid container >
+              <div className={classes.boldletter} style={{ fontSize: 20, width: '100%', marginBottom: 30, paddingBottom: 25, borderBottom: '2px solid rgb(214,227,224)' }}>Search Bills:</div>
+              <Grid container style={{
+                marginBottom: 30, paddingBottom: 25, borderBottom: '2px solid rgb(214,227,224)'
+              }}>
+                <Grid item xs={12} sm={6}>
+                  <div className={classes.row_container}>
+                    <div className={classes.boldletter}>Start Date:</div>
+                    <KeyboardDatePicker
+                      required
+                      format="MM/DD/YYYY"
+                      name="startDate"
+                      value={selectedDate}
+                      style={{ width: '65%' }}
+                      onChange={handleDateChange}
+                    />
+                  </div>
+                  <div className={classes.row_container}>
+                    <div className={classes.boldletter}>End Date:</div>
+                    <KeyboardDatePicker
+                      required
+                      format="MM/DD/YYYY"
+                      name="startDate"
+                      value={selectedDate}
+                      style={{ width: '65%' }}
+                      onChange={handleDateChange}
+                    />
+                  </div>
+                  {/* <div style={{ textAlign: 'right' }}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          name="ignore_dates"
+                          color="primary"
+                        />
+                      }
+                      label="Ignore dates "
+                    />
+                  </div> */}
+                </Grid>
+                < Grid item xs={12} sm={6} style={{ paddingLeft: 10 }}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        name="cash"
+                        color="primary"
+                      />
+                    }
+                    label="Cash "
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        name="other"
+                        color="primary"
+                      />
+                    }
+                    label="Other "
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        name="card"
+                        color="primary"
+                      />
+                    }
+                    label="Card "
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        name="transfer"
+                        color="primary"
+                      />
+                    }
+                    label="Transfer "
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        name="company"
+                        color="primary"
+                      />
+                    }
+                    label="Company "
+                  />
+                  <div className={classes.totalcontainer}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          name="ignore_dates"
+                          color="primary"
+                        />
+                      }
+                      label="Ignore dates "
+                    />
+                    <div className={classes.boldletter}>Total:</div>
+                    <div>7 867,40 €</div>
+                  </div>
+                </Grid>
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => { setFilterOpen(false) }} color="primary">
+              Disagree
+            </Button>
+            <Button onClick={() => { setFilterOpen(false) }} color="primary">
+              Agree
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </div>
+      <Box p={2} minHeight={56} display="flex" alignItems="center" justifyContent='space-between' >
         <TextField
           className={classes.queryField}
           InputProps={{
@@ -148,7 +303,11 @@ const Results = ({
           onChange={handleQueryChange}
           placeholder={formatMessage(intl.search)}
         />
-        <Box flexGrow={1} />
+        <FilterListIcon
+          style={{ cursor: 'pointer' }}
+          onClick={() => { setFilterOpen(true) }}
+          title="Filter"
+        />
       </Box>
       {enableBulkOperations && (
         <div className={classes.bulkOperations}>

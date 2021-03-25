@@ -37,7 +37,7 @@ const StudentEditView = ({ match, intl }) => {
 
   const getStudentinfo = useCallback(async () => {
     // httpClient.get(`api/student/3416`)
-      httpClient.get(`api/student/${params.studentId}`)
+    httpClient.get(`api/student/${params.studentId}`)
       .then(json => {
         if (json.success && isMountedRef.current) {
           setStudent(json.student[0]);

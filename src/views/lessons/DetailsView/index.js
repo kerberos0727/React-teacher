@@ -35,23 +35,50 @@ const LessonDetailView = ({ intl }) => {
 	const params = useParams();
 	const classes = useStyles();
 	const isMountedRef = useIsMountedRef();
-	const [ lesson, setLesson ] = useState(null);
+	const [lesson, setLesson] = useState([]);
+	const [textbooks, setTextbooks] = useState([]);
+	const [students, setStudents] = useState([]);
 
 	const getLesson = useCallback(async () => {
-    try {
-      const response = await axios.get(`api/lesson/1`);
-      // const response = await axios.get(`api/lesson/${params.lessonId}`);
-      if (isMountedRef.current) {
-        setLesson(response.data.lesson);
-        console.log(response.data.lesson)
-      }
-    } catch (err) {
-      console.log(err)
-    }
+		httpClient.get(`api/lessons/${params.lessonId}/${params.topicsName}`)
+			.then(json => {
+				if (json.success && isMountedRef.current) {
+					setLesson(json.lesson[0]);
+				}
+			})
+			.catch((error) => {
+				console.log(error);
+			});
+	}, [isMountedRef]);
+
+	const getTextbooks = useCallback(async () => {
+		httpClient.get(`api/lessons/textbook/${params.lessonId}/textbook`)
+			.then(json => {
+				if (json.success && isMountedRef.current) {
+					setTextbooks(json.textbooks);
+				}
+			})
+			.catch((error) => {
+				console.log(error);
+			});
+	}, [isMountedRef]);
+
+	const getStudents = useCallback(async () => {
+		httpClient.get(`api/lessons/student/${params.lessonId}/student`)
+			.then(json => {
+				if (json.success && isMountedRef.current) {
+					setStudents(json.students);
+				}
+			})
+			.catch((error) => {
+				console.log(error);
+			});
 	}, [isMountedRef]);
 
 	useEffect(() => {
 		getLesson();
+		getTextbooks();
+		getStudents();
 	}, [getLesson]);
 
 	if (!lesson) {
@@ -68,13 +95,17 @@ const LessonDetailView = ({ intl }) => {
 					goBack
 					actualPage={formatMessage(intl.lessonDetail)}
 					buttonRight={{
-						icon: (<EditIcon/>),
+						icon: (<EditIcon />),
 						label: formatMessage(intl.edit),
 						to: formatMessage(intl.urlLessonEdit, { lessonId: params.lessonId }),
 					}}
 				/>
 				<Box mt={3}>
-					<Details lesson={lesson} />
+					<Details
+						lesson={lesson}
+						textbooks={textbooks}
+						students={students}
+					/>
 				</Box>
 			</Container>
 		</Page>

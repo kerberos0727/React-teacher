@@ -34,21 +34,64 @@ const LessonEditView = ({ match, intl }) => {
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
   const [lesson, setLesson] = useState(null);
+  const [textbooks, setTextbooks] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [topics, setTopics] = useState([]);
 
   const getLesson = useCallback(async () => {
-    httpClient.get(`api/lessons/${params.lessonId}`)
+    httpClient.get(`api/lessons/${params.lessonId}/${params.topicsName}`)
       .then(json => {
         if (json.success && isMountedRef.current) {
-          setLesson(json.lesson);
+          setLesson(json.lesson[0]);
         }
       })
       .catch((error) => {
         console.log(error);
       });
-  }, [isMountedRef, params.lessonId]);
+  }, [isMountedRef]);
+
+  const getTextbooks = useCallback(async () => {
+    httpClient.get(`api/lessons/textbook/${params.lessonId}/textbook`)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          setTextbooks(json.textbooks);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, [isMountedRef]);
+
+  const getStudents = useCallback(async () => {
+    httpClient.get(`api/lessons/student/${params.lessonId}/student`)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          setStudents(json.students);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, [isMountedRef]);
+
+  const getTopics = useCallback(async () => {
+    httpClient.get(`api/lessons/topics/${params.lessonId}/topics`)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          setTopics(json.topics);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, [isMountedRef]);
 
   useEffect(() => {
+    getTextbooks();
+    getStudents();
+    getTopics();
     getLesson();
+    
   }, [getLesson]);
 
   if (!lesson) {
@@ -65,7 +108,13 @@ const LessonEditView = ({ match, intl }) => {
       </Container>
       <Box mt={3}>
         <Container maxWidth={false}>
-          <LessonEditForm update lesson={lesson} />
+          <LessonEditForm
+            update
+            lesson={lesson}
+            textbooks={textbooks}
+            students={students}
+            topics={topics}
+          />
         </Container>
       </Box>
     </Page>
