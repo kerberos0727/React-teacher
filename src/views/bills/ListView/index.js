@@ -13,8 +13,8 @@ import Page from 'src/components/Page';
 import Header from 'src/components/HeaderBreadcrumbs';
 import useIsMountedRef from 'src/hooks/useIsMountedRef';
 import { useSnackbar } from 'notistack';
-import axios from 'src/utils/axios';
-
+import Backdrop from '@material-ui/core/Backdrop';
+import CircularProgress from '@material-ui/core/CircularProgress';
 /* utils */
 import httpClient from 'src/utils/httpClient';
 
@@ -36,6 +36,9 @@ const BillsListView = ({ intl, currentLanguage }) => {
   const [bills, setBills] = useState([]);
   const { enqueueSnackbar } = useSnackbar();
   const [totalcount, setTotalcount] = useState(0);
+  const [totalPrice, setTotalprice] = useState(0);
+  const [loading, setLoading] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
 
   const deleteBills = (selectedBills) => {
     // let temp = [];
@@ -62,6 +65,8 @@ const BillsListView = ({ intl, currentLanguage }) => {
         if (json.success && isMountedRef.current) {
           setBills(json.bills);
           setTotalcount(json.total)
+          setOpen(false);
+          setLoading(true);
         }
       })
       .catch((error) => {
@@ -82,7 +87,24 @@ const BillsListView = ({ intl, currentLanguage }) => {
       });
   }
 
+  const handleSearchData = (data) => {
+    const url = `api/bills/search`
+    const method = 'post';
+    httpClient[method](url, data)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          setBills(json.bills);
+          setTotalcount(json.total);
+          setTotalprice(json.total_price[0].price);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+
   useEffect(() => {
+    setOpen(!open);
     getBills();
   }, [getBills]);
 
@@ -94,16 +116,26 @@ const BillsListView = ({ intl, currentLanguage }) => {
       <Container maxWidth={false}>
         <Header
           actualPage={formatMessage(intl.bills)}
-          // buttonRight={{ to: formatMessage(intl.urlBillAdd), label: 'new Bill' }}
+        // buttonRight={{ to: formatMessage(intl.urlBillAdd), label: 'new Bill' }}
         />
         <Box mt={3}>
-          <Results
-            bills={bills}
-            totalcount={totalcount}
-            deleteBill={deleteBill}
-            deleteBills={deleteBills}
-            handleGetData={handleGetData}
-          />
+          {
+            loading ?
+              <Results
+                bills={bills}
+                totalcount={totalcount}
+                totalPrice={totalPrice}
+                deleteBill={deleteBill}
+                deleteBills={deleteBills}
+                handleGetData={handleGetData}
+                handleSearchData={handleSearchData}
+              /> :
+              <div>
+                <Backdrop className={classes.backdrop} open={open}>
+                  <CircularProgress color="inherit" />
+                </Backdrop>
+              </div>
+          }
         </Box>
       </Container>
     </Page>

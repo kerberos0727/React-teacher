@@ -162,8 +162,8 @@ const LessonInfo = ({ lesson, textbooks, students, intl }) => {
 LessonInfo.propTypes = {
   className: PropTypes.string,
   lesson: PropTypes.object.isRequired,
-  textbooks: PropTypes.object.isRequired,
-  students: PropTypes.object.isRequired
+  textbooks: PropTypes.array.isRequired,
+  students: PropTypes.array.isRequired
 };
 
 const mapStateToProps = (store) => ({

@@ -12,12 +12,13 @@ import Results from './Results';
 import Page from 'src/components/Page';
 import Header from 'src/components/HeaderBreadcrumbs';
 import useIsMountedRef from 'src/hooks/useIsMountedRef';
-import { useSnackbar } from 'notistack';
 import "src/components/global";
 
 /* utils */
 import httpClient from 'src/utils/httpClient';
-
+import Backdrop from '@material-ui/core/Backdrop';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Button from '@material-ui/core/Button';
 /* connectIntl */
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
 
@@ -27,14 +28,20 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: theme.spacing(3),
     paddingBottom: theme.spacing(3),
     backgroundColor: theme.palette.background.dark,
-  }
+  },
+  backdrop: {
+    zIndex: theme.zIndex.drawer + 1,
+    color: '#fff',
+  },
 }));
 
-const LessonsListView = ({ intl, currentLanguage }) => {
+const LessonsListView = ({ intl }) => {
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
   const [lessons, setLessons] = useState([]);
   const [totalcount, setTotalcount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = React.useState(false);
 
   const deleteLessons = (selectedLessons) => {
     let temp = [];
@@ -73,59 +80,9 @@ const LessonsListView = ({ intl, currentLanguage }) => {
       .then(json => {
         if (json.success && isMountedRef.current) {
           setLessons(json.lessons);
-          console.log('json.lessons------->', json.lessons)
-          setTotalcount(json.total)
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }, [isMountedRef]);
-
-  const getAllTeachers = useCallback(() => {
-    httpClient.get(`api/teacher/all`)
-      .then(json => {
-        if (json.success && isMountedRef.current) {
-          let data = []
-          json.teachers.map((val, index) => {
-            data.push(val.name);
-          })
-          global.teachers = data;
-          global.Allteachers = json.teachers;
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }, [isMountedRef]);
-
-  const getAllLessoninfos = useCallback(async () => {
-    httpClient.get(`api/lessoninfo/all`)
-      .then(json => {
-        if (json.success && isMountedRef.current) {
-          let data = []
-          json.lessoninfos.map((val, index) => {
-            data.push(val.name);
-          })
-          global.lessoninfos = data;
-          global.Alllessoninfos = json.lessoninfos;
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }, [isMountedRef]);
-
-  const getAllTopics = useCallback(async () => {
-    httpClient.get(`api/topics/all`)
-      .then(json => {
-        if (json.success && isMountedRef.current) {
-          let data = []
-          json.topics.map((val, index) => {
-            data.push(val.name);
-          })
-          global.topics = data;
-          global.Alltopics = json.topics;
+          setTotalcount(json.total);
+          setOpen(false)
+          setLoading(true)
         }
       })
       .catch((error) => {
@@ -149,12 +106,12 @@ const LessonsListView = ({ intl, currentLanguage }) => {
   }
 
   useEffect(() => {
-    getAllTeachers();
-    getAllLessoninfos();
-    getAllTopics();
+    // getAllTeachers();
+    // getAllLessoninfos();
+    // getAllTopics();
+    setOpen(!open);
     getLessons();
   }, [getLessons]);
-
 
   return (
     <Page
@@ -165,21 +122,24 @@ const LessonsListView = ({ intl, currentLanguage }) => {
         <Header
           actualPage={formatMessage(intl.lessons)}
           buttonRight={{ to: formatMessage(intl.urlLessonAdd), label: 'new Lesson' }}
-        // crumbs={[
-        //   {
-        //     label: formatMessage(intl.appContents),
-        //   }
-        // ]}
         />
         <Box mt={3}>
-          <Results
-            lessons={lessons}
-            totalcount={totalcount}
-            deleteLesson={deleteLesson}
-            deleteLessons={deleteLessons}
-            handleGetData={handleGetData}
-            handleSearchData={handleSearchData}
-          />
+          {
+            loading ?
+              <Results
+                lessons={lessons}
+                totalcount={totalcount}
+                deleteLesson={deleteLesson}
+                deleteLessons={deleteLessons}
+                handleGetData={handleGetData}
+                handleSearchData={handleSearchData}
+              /> :
+              <div>
+                <Backdrop className={classes.backdrop} open={open}>
+                  <CircularProgress color="inherit" />
+                </Backdrop>
+              </div>
+          }
         </Box>
       </Container>
     </Page>

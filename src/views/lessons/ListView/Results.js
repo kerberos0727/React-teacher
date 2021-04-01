@@ -11,14 +11,11 @@ import {
   SvgIcon,
   Checkbox,
   TableRow,
-  useTheme,
   TableBody,
   TableCell,
   TableHead,
-  TextField,
   makeStyles,
   IconButton,
-  InputAdornment,
   TablePagination,
   withStyles
 } from '@material-ui/core';
@@ -28,10 +25,6 @@ import {
 } from 'react-feather';
 import { useSnackbar } from 'notistack';
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
-import FilterListIcon from '@material-ui/icons/FilterList';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
 import FixedTextField from 'src/components/FixedTextField'
 import 'src/components/global';
 import Autocomplete from '@material-ui/lab/Autocomplete';
@@ -53,6 +46,25 @@ import {
 /* connectIntl */
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
 
+import {
+  getLanguages,
+  getAllLanguages,
+  getLevels,
+  getAllLevels,
+  getGroups,
+  getAllGroups,
+  getTeachers,
+  getAllTeachers
+} from 'src/localstorage';
+
+var { global_levels } = getLevels();
+var { global_languages } = getLanguages();
+var { global_groups } = getGroups();
+var { global_allgroups } = getAllGroups();
+var { global_teachers } = getTeachers();
+var { global_alllanguages } = getAllLanguages();
+var { global_alllevels } = getAllLevels();
+var { global_allteachers } = getAllTeachers();
 
 const CssTextField = withStyles({
   root: {
@@ -187,7 +199,7 @@ const Results = ({
     let newdata = { ...searchVals }
     switch (name) {
       case 'teacher':
-        let data = global.Allteachers;
+        let data = global.Allteachers.length !== 0 ? global.Allteachers : JSON.parse(global_allteachers);
         if (value !== null) {
           for (let i = 0; i < data.length; i++) {
             if (data[i].name === value) {
@@ -195,11 +207,13 @@ const Results = ({
               newdata.teacher = data[i].id
             }
           }
-        } else
-          newdata.teacher = ''
+        } else {
+          newdata.teacher = '';
+          setTeacher('');
+        }
         break;
       case 'group':
-        let groupdata = global.Allgroups;
+        let groupdata = global.Allgroups.length !== 0 ? global.Allgroups : JSON.parse(global_allgroups);
         if (value !== null) {
           for (let i = 0; i < groupdata.length; i++) {
             if (groupdata[i].name === value) {
@@ -207,11 +221,13 @@ const Results = ({
               newdata.group = groupdata[i].id;
             }
           }
-        } else
+        } else {
           newdata.group = '';
+          setGroup(value);
+        }
         break;
       case 'level':
-        let leveldata = global.Allclassis;
+        let leveldata = global.Allclassis.length !== 0 ? global.Allclassis : JSON.parse(global_alllevels);
         if (value !== null) {
           for (let i = 0; i < leveldata.length; i++) {
             if (leveldata[i].name === value) {
@@ -219,11 +235,13 @@ const Results = ({
               newdata.level = leveldata[i].id
             }
           }
-        } else
+        } else {
           newdata.level = ''
+          setLevel(value);
+        }
         break;
       case 'language':
-        let languagedata = global.Alllanguages;
+        let languagedata = global.Alllanguages.length !== 0 ? global.Alllanguages : JSON.parse(global_alllanguages);
         if (value !== null) {
           for (let i = 0; i < languagedata.length; i++) {
             if (languagedata[i].name === value) {
@@ -231,8 +249,10 @@ const Results = ({
               newdata.language = languagedata[i].id
             }
           }
-        } else
+        } else {
           newdata.language = ''
+          setLanguage(value);
+        }
         break;
       case 'datefrom':
         newdata.dateFrom = value;
@@ -276,12 +296,20 @@ const Results = ({
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
-    handleGetData(parseInt(newPage + '0'), limit);
+    let data = { searchVals: searchVals, pagenum: parseInt(newPage + '0'), limitnum: limit }
+    if (searchVals.teacher !== '' || searchVals.level !== '' || searchVals.language !== '' || searchVals.group !== '' || searchVals.dateFrom !== '' || searchVals.dateTo !== '' || searchVals.hourFrom !== '' || searchVals.hourTo !== '' || searchVals.observation !== false || searchVals.conflicts !== false)
+      handleSearchData(data);
+    else
+      handleGetData(parseInt(newPage + '0'), limit);
   };
 
   const handleLimitChange = (event) => {
     setLimit(parseInt(event.target.value));
-    handleGetData(page, event.target.value);
+    let data = { searchVals: searchVals, pagenum: page, imitnum: event.target.value }
+    if (searchVals.teacher !== '' || searchVals.level !== '' || searchVals.language !== '' || searchVals.group !== '' || searchVals.dateFrom !== '' || searchVals.dateTo !== '' || searchVals.hourFrom !== '' || searchVals.hourTo !== '' || searchVals.observation !== false || searchVals.conflicts !== false)
+      handleSearchData(data);
+    else
+      handleGetData(page, event.target.value);
   };
 
   const filteredLessons = applyFilters(lessons, query, filters);
@@ -300,7 +328,7 @@ const Results = ({
               <div className={classes.boldletter}>Teacher:</div>
               <Autocomplete
                 id="teacher"
-                options={global.teachers}
+                options={global.teachers.length !== 0 ? global.teachers : JSON.parse(global_teachers)}
                 getOptionLabel={(option) => option}
                 className={classes.width150}
                 renderInput={(params) => <CssTextField {...params} variant="outlined" />}
@@ -312,7 +340,7 @@ const Results = ({
               <div className={classes.boldletter}>Level:</div>
               <Autocomplete
                 id="level"
-                options={global.classis}
+                options={global.classis.length !== 0 ? global.classis : JSON.parse(global_levels)}
                 getOptionLabel={(option) => option}
                 className={classes.width150}
                 renderInput={(params) => <CssTextField {...params} variant="outlined" />}
@@ -325,7 +353,7 @@ const Results = ({
               <div className={classes.boldletter}>Language:</div>
               <Autocomplete
                 id="language"
-                options={global.languages}
+                options={global.languages.length !== 0 ? global.languages : JSON.parse(global_languages)}
                 getOptionLabel={(option) => option}
                 className={classes.width150}
                 renderInput={(params) => <CssTextField {...params} variant="outlined" />}
@@ -338,7 +366,7 @@ const Results = ({
               <div className={classes.boldletter}>Group:</div>
               <Autocomplete
                 id="group"
-                options={global.groups}
+                options={global.groups.length !== 0 ? global.groups : JSON.parse(global_groups)}
                 getOptionLabel={(option) => option}
                 className={classes.width150}
                 renderInput={(params) => <CssTextField {...params} variant="outlined" />}
@@ -353,7 +381,6 @@ const Results = ({
                 format="MM/DD/YYYY"
                 name="from_date"
                 className={classes.width150}
-                onChange={handleDateChange}
                 value={searchVals.dateFrom}
                 onChange={(date) => handleChangeSearchvals('datefrom', date)}
               />
@@ -522,7 +549,7 @@ const Results = ({
                       </IconButton>
                       <IconButton
                         component={RouterLink}
-                        to={formatMessage(intl.urlLessonEdit, { lessonId: n.id, topicsName: n.topicName })}
+                        to={formatMessage(intl.urlLessonEdit, { lessonId: n.id, topicsName: n.topicName ? n.topicName : 'edit' })}
                         title="Edit"
                       >
                         <SvgIcon fontSize="small">

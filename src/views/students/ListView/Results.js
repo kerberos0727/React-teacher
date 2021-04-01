@@ -46,6 +46,21 @@ import {
   KeyboardDatePicker,
 } from '@material-ui/pickers';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import {
+  getLevels,
+  getAllLevels,
+  getHowdidyouhear,
+  getAllHowdidyouhear,
+  getGroups,
+  getAllGroups
+} from 'src/localstorage';
+
+var { global_levels } = getLevels();
+var { global_howdidyouhear } = getHowdidyouhear();
+var { global_allhowdidyouhear } = getAllHowdidyouhear();
+var { global_groups } = getGroups();
+var { global_allgroups } = getAllGroups();
+var { global_alllevels } = getAllLevels();
 
 const CssTextField = withStyles({
   root: {
@@ -179,10 +194,6 @@ const Results = ({
 
   useEffect(() => {
     let data = { searchVals: searchVals, daysofweekNum: handlegetWeekdays(), pagenum: 0, limitnum: 10 }
-    // if (searchVals.name !== '' || searchVals.postcode !== '' || searchVals.level !== '' || searchVals.enrolled !== '' || searchVals.group !== '' || searchVals.heard !== '' || searchVals.pending !== false || handlegetWeekdays() !== 0) {
-    //   handleSearchData(data);
-    //   console.log('handleSearchData(data)')
-    // }
     if (searchVals.name === '' && searchVals.postcode === '' && searchVals.level === '' && searchVals.enrolled === '' && searchVals.group === '' && searchVals.heard === '' && searchVals.pending === false && handlegetWeekdays() === 0 && searchVals.active === false && searchVals.inactive === false && searchVals.finished === false && searchVals.idle === false && weekVals.monday === false && weekVals.tuesday === false && weekVals.wednesday === false && weekVals.thursday === false && weekVals.friday === false && weekVals.saturday === false) {
       handleGetData(0, 10)
     }
@@ -253,7 +264,7 @@ const Results = ({
         newdata.pending = value;
         break;
       case 'level':
-        let data = global.Allclassis;
+        let data = global.Allclassis.length !== 0 ? global.Allclassis : JSON.parse(global_alllevels);
         if (value !== null) {
           for (let i = 0; i < data.length; i++) {
             if (data[i].name === value) {
@@ -261,11 +272,13 @@ const Results = ({
               newdata.level = data[i].id
             }
           }
-        } else
-          newdata.level = ''
+        } else {
+          newdata.level = '';
+          setLevel(value);
+        }
         break;
       case 'group':
-        let groupdata = global.Allgroups;
+        let groupdata = global.Allgroups.length !== 0 ? global.Allgroups : JSON.parse(global_allgroups);
         if (value !== null) {
           for (let i = 0; i < groupdata.length; i++) {
             if (groupdata[i].name === value) {
@@ -273,11 +286,13 @@ const Results = ({
               newdata.group = groupdata[i].id;
             }
           }
-        } else
+        } else {
           newdata.group = '';
+          setGroup(value);
+        }
         break;
       case 'heard':
-        let hearddata = global.Allhowdidyouhear;
+        let hearddata = global.Allhowdidyouhear.length !== 0 ? global.Allhowdidyouhear : JSON.parse(global_allhowdidyouhear);
         if (value !== null) {
           for (let i = 0; i < hearddata.length; i++) {
             if (hearddata[i].name === value) {
@@ -285,8 +300,10 @@ const Results = ({
               newdata.heard = hearddata[i].id
             }
           }
-        } else
-          newdata.heard = ''
+        } else {
+          newdata.heard = '';
+          setGroup(value);
+        }
         break;
     }
     setSearchvals(newdata)
@@ -294,10 +311,6 @@ const Results = ({
 
   const handleChangeSwitchState = (event) => {
     setSwitchState(event.target.checked);
-  };
-  const handleQueryChange = (event) => {
-    event.persist();
-    setQuery(event.target.value);
   };
 
   const handleSelectAllStudents = (event) => {
@@ -331,53 +344,6 @@ const Results = ({
     else
       handleGetData(page, event.target.value);
   };
-
-  const handleLefthours = (max, useal) => {
-    var int_max = 0, int_useal = 0, maxMin = 0, usealMin = 0, leftHour = 0, leftMin = 0;
-    if (max !== null) {
-      int_max = max.split(":");
-      maxMin = parseInt(int_max[0]) * 60 + parseInt(int_max[1]);
-    }
-    if (useal !== null) {
-      int_useal = useal.split(":");
-      usealMin = parseInt(int_useal[0]) * 60 + parseInt(int_useal[1]);
-    }
-    leftHour = Math.floor((maxMin - usealMin) / 60);
-    leftMin = (maxMin - usealMin) % 60;
-    if (leftHour < 10)
-      leftHour = `0${leftHour}`
-    if (leftMin < 10)
-      leftMin = `0${leftMin}`
-    return (`${leftHour}:${leftMin}`)
-  }
-
-  const handelLeftdays = (enddate) => {
-    if (enddate !== null) {
-      var daysofmon = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-      var e_year = 0, e_month = 0, e_day = 0, c_year = 2021, c_month = 0, c_day = 0;
-      var newDate = new Date();
-      e_year = parseInt(enddate.split("-")[0]);
-      e_month = parseInt(enddate.split("-")[1]);
-      e_day = parseInt(enddate.split("-")[2]);
-      // c_year = parseInt(`2${newDate.getYear()}`);
-      c_month = parseInt(newDate.getMonth() + 1);
-      c_day = parseInt(newDate.getDate());
-      if (c_year === e_year) {
-        if (c_month < e_month || c_month > e_month) {
-          var e_days = 0, c_days = 0, i = 0;
-          for (i = 1; i < e_month; i++)
-            e_days += daysofmon[i]
-          e_days += e_day
-          for (i = 1; i < c_month; i++)
-            c_days += daysofmon[i]
-          c_days += c_day
-          return (e_days - c_days)
-        }
-        if (c_month === e_month)
-          return e_day - c_day
-      }
-    }
-  }
 
   const filteredStudents = applyFilters(students, query, filters);
   const sortedStudents = applySort(filteredStudents, sort);
@@ -419,7 +385,7 @@ const Results = ({
               <div className={classes.boldletter}>Level:</div>
               <Autocomplete
                 id="level"
-                options={global.classis}
+                options={global.classis.length !== 0 ? global.classis : JSON.parse(global_levels)}
                 getOptionLabel={(option) => option}
                 className={classes.width150}
                 renderInput={(params) => <CssTextField {...params} variant="outlined" />}
@@ -444,7 +410,7 @@ const Results = ({
               <div className={classes.boldletter}>Group:</div>
               <Autocomplete
                 id="group"
-                options={global.groups}
+                options={global.groups.length !== 0 ? global.groups : JSON.parse(global_groups)}
                 getOptionLabel={(option) => option}
                 className={classes.width150}
                 renderInput={(params) => <CssTextField {...params} variant="outlined" />}
@@ -456,7 +422,7 @@ const Results = ({
               <div className={classes.boldletter}>Heard of us:</div>
               <Autocomplete
                 id="heard"
-                options={global.howdidyouhear}
+                options={global.howdidyouhear.length !== 0 ? global.howdidyouhear : JSON.parse(global_howdidyouhear)}
                 getOptionLabel={(option) => option}
                 className={classes.width150}
                 renderInput={(params) => <CssTextField {...params} variant="outlined" />}

@@ -14,12 +14,36 @@ import Header from 'src/components/HeaderBreadcrumbs';
 import useIsMountedRef from 'src/hooks/useIsMountedRef';
 import { useSnackbar } from 'notistack';
 import "src/components/global";
+import {
+  setLevels,
+  setAllLevels,
+  setLanguages,
+  setAllLanguages,
+  setGroups,
+  setAllGroups,
+  setTextbooks,
+  setAllTextbooks,
+  setTeachers,
+  setAllTeachers,
+  setLessoninfos,
+  setAllLessoninfos,
+  setTopics,
+  setAllTopics
+} from 'src/localstorage';
 
 /* utils */
 import httpClient from 'src/utils/httpClient';
-
+import Backdrop from '@material-ui/core/Backdrop';
+import CircularProgress from '@material-ui/core/CircularProgress';
 /* connectIntl */
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
+import {
+  setHowdidyouhear,
+  setAllHowdidyouhear,
+  setAllLessontextbooks,
+  setAllStudents,
+  setAllUsers,
+} from 'src/localstorage';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -27,7 +51,11 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: theme.spacing(3),
     paddingBottom: theme.spacing(3),
     backgroundColor: theme.palette.background.dark,
-  }
+  },
+  backdrop: {
+    zIndex: theme.zIndex.drawer + 1,
+    color: '#fff',
+  },
 }));
 var total = 0;
 
@@ -36,6 +64,8 @@ const StudentsListView = ({ intl, currentLanguage }) => {
   const isMountedRef = useIsMountedRef();
   const [students, setStudents] = useState([]);
   const [totalcount, setTotalcount] = useState(0);
+  const [loading, setLoading] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
 
   const deleteStudents = (selectedStudents) => {
     let temp = [];
@@ -63,6 +93,7 @@ const StudentsListView = ({ intl, currentLanguage }) => {
           setStudents(json.students);
           setTotalcount(json.total)
           total = json.total;
+          getClassinfo();
         }
       })
       .catch((error) => {
@@ -75,6 +106,22 @@ const StudentsListView = ({ intl, currentLanguage }) => {
       .then(json => {
         if (json.success && isMountedRef.current) {
           global.Allstudents = json.students;
+          setAllStudents(JSON.stringify(json.students));
+          getAllUsers();
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  })
+
+  const getAllUsers = useCallback(async () => {
+    httpClient.get(`api/user/all`)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          global.Allusers = json.users;
+          setAllUsers(JSON.stringify(json.users));
+          getAllTeachers();
         }
       })
       .catch((error) => {
@@ -92,6 +139,9 @@ const StudentsListView = ({ intl, currentLanguage }) => {
           })
           global.classis = data;
           global.Allclassis = json.classes;
+          setLevels(JSON.stringify(data));
+          setAllLevels(JSON.stringify(json.classes));
+          getLanguageinfo();
         }
       })
       .catch((error) => {
@@ -109,6 +159,9 @@ const StudentsListView = ({ intl, currentLanguage }) => {
           })
           global.languages = data;
           global.Alllanguages = json.languages;
+          setLanguages(JSON.stringify(data));
+          setAllLanguages(JSON.stringify(json.languages));
+          getHowdidyouhearinfo();
         }
       })
       .catch((error) => {
@@ -126,6 +179,9 @@ const StudentsListView = ({ intl, currentLanguage }) => {
           })
           global.howdidyouhear = data;
           global.Allhowdidyouhear = json.howdidyouhears;
+          setHowdidyouhear(JSON.stringify(data));
+          setAllHowdidyouhear(JSON.stringify(json.howdidyouhears));
+          getGroupsinfo();
         }
       })
       .catch((error) => {
@@ -143,6 +199,9 @@ const StudentsListView = ({ intl, currentLanguage }) => {
           })
           global.groups = data;
           global.Allgroups = json.groups;
+          setGroups(JSON.stringify(data));
+          setAllGroups(JSON.stringify(json.groups));
+          getTextbooksinfo()
         }
       })
       .catch((error) => {
@@ -178,6 +237,71 @@ const StudentsListView = ({ intl, currentLanguage }) => {
           global.Alllessontextbooks = data2;
           global.textbooks = data;
           global.Alltextbooks = json.textbooks;
+          setAllLessontextbooks(JSON.stringify(data2));
+          setTextbooks(JSON.stringify(data));
+          setAllTextbooks(JSON.stringify(json.textbooks));
+          getAllStudents();
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, [isMountedRef]);
+
+  const getAllTeachers = useCallback(() => {
+    httpClient.get(`api/teacher/all`)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          let data = []
+          json.teachers.map((val, index) => {
+            data.push(val.name);
+          })
+          setTeachers(JSON.stringify(data));
+          setAllTeachers(JSON.stringify(json.teachers));
+          global.teachers = data;
+          global.Allteachers = json.teachers;
+          getAllLessoninfos();
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, [isMountedRef]);
+
+  const getAllLessoninfos = useCallback(async () => {
+    httpClient.get(`api/lessoninfo/all`)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          let data = []
+          json.lessoninfos.map((val, index) => {
+            data.push(val.name);
+          })
+          setLessoninfos(JSON.stringify(data));
+          setAllLessoninfos(JSON.stringify(json.lessoninfos));
+          global.lessoninfos = data;
+          global.Alllessoninfos = json.lessoninfos;
+          getAllTopics();
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, [isMountedRef]);
+
+  const getAllTopics = useCallback(async () => {
+    httpClient.get(`api/topics/all`)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          let data = []
+          json.topics.map((val, index) => {
+            data.push(val.name);
+          })
+          setTopics(JSON.stringify(data));
+          setAllTopics(JSON.stringify(json.topics));
+          global.topics = data;
+          global.Alltopics = json.topics;
+          setOpen(false);
+          setLoading(true);
         }
       })
       .catch((error) => {
@@ -214,14 +338,16 @@ const StudentsListView = ({ intl, currentLanguage }) => {
   }
 
   useEffect(() => {
+    setOpen(!open);
     getStudents();
-    getClassinfo();
-    getLanguageinfo();
-    getHowdidyouhearinfo();
-    getGroupsinfo();
-    getTextbooksinfo();
-    getAllStudents();
-  }, [getStudents, getClassinfo, getLanguageinfo, getHowdidyouhearinfo, getGroupsinfo, getTextbooksinfo]);
+    // getClassinfo();
+    // getLanguageinfo();
+    // getHowdidyouhearinfo();
+    // getGroupsinfo();
+    // getTextbooksinfo();
+    // getAllStudents();
+    // getAllusers();
+  }, [getStudents]);
 
   return (
     <Page
@@ -234,14 +360,22 @@ const StudentsListView = ({ intl, currentLanguage }) => {
           buttonRight={{ to: formatMessage(intl.urlStudentAdd), label: 'new student' }}
         />
         <Box mt={3}>
-          <Results
-            students={students}
-            totalcount={totalcount}
-            deleteStudent={deleteStudent}
-            deleteStudents={deleteStudents}
-            handleGetData={handleGetData}
-            handleSearchData={handleSearchData}
-          />
+          {
+            loading ?
+              <Results
+                students={students}
+                totalcount={totalcount}
+                deleteStudent={deleteStudent}
+                deleteStudents={deleteStudents}
+                handleGetData={handleGetData}
+                handleSearchData={handleSearchData}
+              /> :
+              <div>
+                <Backdrop className={classes.backdrop} open={open}>
+                  <CircularProgress color="inherit" />
+                </Backdrop>
+              </div>
+          }
         </Box>
       </Container>
     </Page>

@@ -22,6 +22,9 @@ const useStyles = makeStyles((theme) => ({
 
 const LessonEditView = ({ intl }) => {
   const classes = useStyles();
+  const [textbooks, setTextbooks] = React.useState([]);
+  const [students, setStudents] = React.useState([]);
+  const [topics, setTopics] = React.useState([]);
 
   return (
     <Page
@@ -33,7 +36,11 @@ const LessonEditView = ({ intl }) => {
       </Container>
       <Box mt={3}>
         <Container maxWidth={false}>
-          <LessonAddForm />
+          <LessonAddForm
+            textbooks={textbooks}
+            students={students}
+            topics={topics}
+          />
         </Container>
       </Box>
     </Page>

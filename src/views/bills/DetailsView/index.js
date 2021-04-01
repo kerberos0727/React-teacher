@@ -38,16 +38,15 @@ const BillDetailView = ({ intl }) => {
 	const [bill, setBill] = useState(null);
 
 	const getBill = useCallback(async () => {
-		try {
-			const response = await axios.get(`api/bill/1`);
-			// const response = await axios.get(`api/bill/${params.billId}`);
-			if (isMountedRef.current) {
-				setBill(response.data.bill);
-				console.log(response.data.bill)
-			}
-		} catch (err) {
-			console.log(err)
-		}
+		httpClient.get(`api/bills/${params.billId}`)
+			.then(json => {
+				if (json.success && isMountedRef.current) {
+					setBill(json.bill[0]);
+				}
+			})
+			.catch((error) => {
+				console.log(error);
+			});
 	}, [isMountedRef]);
 
 	useEffect(() => {
@@ -69,7 +68,7 @@ const BillDetailView = ({ intl }) => {
 					actualPage={formatMessage(intl.billDetail)}
 				/>
 				<Box mt={3}>
-					<Details bill={bill} />
+					<Details bill={bill} billNum={params.billNum} />
 				</Box>
 			</Container>
 		</Page>

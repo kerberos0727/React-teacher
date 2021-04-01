@@ -24,6 +24,14 @@ import Divider from '@material-ui/core/Divider';
 import List from '@material-ui/core/List';
 /* connectIntl */
 import { connectIntl } from 'src/contexts/Intl';
+import {
+  getLevels,
+  getTextbooks,
+  getTeachers
+} from 'src/localstorage';
+var { global_levels } = getLevels();
+var { global_textbooks } = getTextbooks();
+var { global_teachers } = getTeachers();
 
 function not(a, b) {
   return a.filter((value) => b.indexOf(value) === -1);
@@ -268,7 +276,7 @@ const GroupAddEditForm = ({ group, update, intl }) => {
                       <div className={classes.boldletter}>Teacher:</div>
                       <Autocomplete
                         id="teacher"
-                        options={global.teachers}
+                        options={global.teachers.length !== 0 ? global.teachers : JSON.parse(global_teachers)}
                         getOptionLabel={(option) => option}
                         className={classes.recomment_combo}
                         renderInput={(params) => <CssTextField {...params} />}
@@ -279,7 +287,7 @@ const GroupAddEditForm = ({ group, update, intl }) => {
                       <div className={classes.boldletter}>Level:</div>
                       <Autocomplete
                         id="level"
-                        options={global.classis}
+                        options={global.classis.length !== 0 ? global.classis : JSON.parse(global_levels)}
                         getOptionLabel={(option) => option}
                         className={classes.recomment_combo}
                         renderInput={(params) => <CssTextField {...params} />}
@@ -290,7 +298,7 @@ const GroupAddEditForm = ({ group, update, intl }) => {
                       <div className={classes.boldletter}>Textbook:</div>
                       <Autocomplete
                         id="textbook"
-                        options={global.textbooks}
+                        options={global.textbooks.length !== 0 ? global.textbooks : JSON.parse(global_textbooks)}
                         getOptionLabel={(option) => option}
                         className={classes.recomment_combo}
                         renderInput={(params) => <CssTextField {...params} />}
@@ -310,7 +318,7 @@ const GroupAddEditForm = ({ group, update, intl }) => {
                         <div className={classes.boldletter} style={{ width: '30%' }}>End:</div>
                         <Autocomplete
                           id="end"
-                          options={global.textbooks}
+                          options={global.textbooks.length !== 0 ? global.textbooks : JSON.parse(global_textbooks)}
                           getOptionLabel={(option) => option}
                           style={{ height: 50, width: '70%', marginRight: 10 }}
                           renderInput={(params) => <CssTextField {...params} />}

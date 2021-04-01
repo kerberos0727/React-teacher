@@ -48,7 +48,19 @@ import httpClient from 'src/utils/httpClient';
 import 'src/components/global';
 /* connectIntl */
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
+import {
+  getLanguages,
+  getLevels,
+  getHowdidyouhear,
+  getAllGroups,
+  getAllTextbooks
+} from 'src/localstorage';
 
+var { global_howdidyouhear } = getHowdidyouhear();
+var { global_levels } = getLevels();
+var { global_allgroups } = getAllGroups();
+var { global_languages } = getLanguages();
+var { global_alltextbooks } = getLanguages();
 var arrGroupinfo;
 
 function not(a, b) {
@@ -276,7 +288,7 @@ const StudentAddEditForm = ({ student, update, intl }) => {
   };
 
   const [groupchecked, setGroupChecked] = React.useState([]);
-  const [groupleft, setGroupLeft] = React.useState(global.Allgroups);
+  const [groupleft, setGroupLeft] = React.useState(global.Allgroups.length !== 0 ? global.Allgroups : JSON.parse(global_allgroups));
   const [groupright, setGroupRight] = React.useState(selectedGroups);
 
   const groupleftChecked = intersection(groupchecked, groupleft);
@@ -346,7 +358,7 @@ const StudentAddEditForm = ({ student, update, intl }) => {
 
 
   const [textbookchecked, setTextbookChecked] = React.useState([]);
-  const [textbookleft, setTextbookLeft] = React.useState(global.Alltextbooks);
+  const [textbookleft, setTextbookLeft] = React.useState(global.Alltextbooks.length !== 0 ? global.Alltextbooks : JSON.parse(global_alltextbooks));
   const [textbookright, setTextbookRight] = React.useState([]);
   const [oldtextbookright, setOldTextbookRight] = React.useState([]);
 
@@ -528,7 +540,6 @@ const StudentAddEditForm = ({ student, update, intl }) => {
   }, [isMountedRef]);
 
   const getTextbookinfo = useCallback(async () => {
-    console.log('student id===?', student.id)
     // httpClient.get(`api/textbooks/8395`)
     httpClient.get(`api/textbooks/${student.id}`)
       .then(json => {
@@ -845,7 +856,7 @@ const StudentAddEditForm = ({ student, update, intl }) => {
                           <div className={classes.boldletter}>Language:</div>
                           <Autocomplete
                             name="language"
-                            options={global.languages}
+                            options={global.languages.length !== 0 ? global.languages : JSON.parse(global_languages)}
                             getOptionLabel={(option) => option}
                             style={{ width: 230, height: 50 }}
                             renderInput={(params) => <CssTextField {...params} />}
@@ -857,7 +868,7 @@ const StudentAddEditForm = ({ student, update, intl }) => {
                           <div className={classes.boldletter}>Level:</div>
                           <Autocomplete
                             name="level"
-                            options={global.classis}
+                            options={global.classis.length !== 0 ? global.classis : JSON.parse(global_levels)}
                             getOptionLabel={(option) => option}
                             style={{ width: 230, height: 50 }}
                             renderInput={(params) => <CssTextField {...params} />}
@@ -869,7 +880,7 @@ const StudentAddEditForm = ({ student, update, intl }) => {
                           <div className={classes.boldletter}>Heard of us:</div>
                           <Autocomplete
                             id="howdidheard"
-                            options={global.howdidyouhear}
+                            options={global.howdidyouhear.length !== 0 ? global.howdidyouhear : JSON.parse(global_howdidyouhear)}
                             getOptionLabel={(option) => option}
                             style={{ width: 230, height: 50 }}
                             renderInput={(params) => <CssTextField {...params} />}
@@ -1253,7 +1264,7 @@ const StudentAddEditForm = ({ student, update, intl }) => {
                         </Grid>
                       </Grid>
                     </Grid>
-
+{/* 
                     <Grid container alignItems="center" className={classes.transfer_root}>
                       <Grid item md={5} xs={12}>
                         <div className={classes.row_container}>
@@ -1291,9 +1302,9 @@ const StudentAddEditForm = ({ student, update, intl }) => {
                         </Grid>
                       </Grid>
                       <Grid item md={5} xs={12}>{customGroupList(groupright)}</Grid>
-                    </Grid>
+                    </Grid> */}
 
-                    <Grid container alignItems="center" className={classes.transfer_root}>
+                    {/* <Grid container alignItems="center" className={classes.transfer_root}>
                       <Grid item md={5} xs={12}>
                         <div className={classes.row_container}>
                           <div className={classes.boldletter}>Search:</div>
@@ -1330,86 +1341,8 @@ const StudentAddEditForm = ({ student, update, intl }) => {
                         </Grid>
                       </Grid>
                       <Grid item md={5} xs={12}>{customTextbookListRight(textbookright)}</Grid>
-                    </Grid>
-
-
-                    {/* <Grid container alignItems="center" className={classes.transfer_root}>
-                      <Grid item md={5} xs={12}>
-                        <div className={classes.row_container}>
-                          <div className={classes.boldletter}>Search:</div>
-                          <CssTextField
-                            id="groups_search"
-                            style={{ height: 50 }}
-                          />
-                        </div>
-                        {groupsList(groupleft, 'groupleft')}
-                      </Grid>
-                      <Grid item md={2} xs={12}>
-                        <Grid container direction="column" alignItems="center">
-                          <div className={classes.boldletter}>Groups</div>
-                          <Button
-                            color="secondary"
-                            variant="contained"
-                            className={classes.button}
-                            onClick={handleGroupCheckedRight}
-                            disabled={groupleftChecked.length === 0}
-                            aria-label="move selected right"
-                          >
-                            &gt;
-                          </Button>
-                          <Button
-                            color="secondary"
-                            variant="contained"
-                            className={classes.button}
-                            onClick={handleGroupCheckedLeft}
-                            disabled={grouprightChecked.length === 0}
-                            aria-label="move selected left"
-                          >
-                            &lt;
-                          </Button>
-                        </Grid>
-                      </Grid>
-                      <Grid item md={5} xs={12}>{groupsList(groupright, 'groupright')}</Grid>
-                    </Grid>
-
-                    <Grid container alignItems="center" className={classes.transfer_root}>
-                      <Grid item md={5} xs={12}>
-                        <div className={classes.row_container}>
-                          <div className={classes.boldletter}>Search:</div>
-                          <CssTextField
-                            id="textbook_search"
-                            style={{ height: 50 }}
-                          />
-                        </div>
-                        {textbooksList('textbookleft', textbookleft)}
-                      </Grid>
-                      <Grid item md={2} xs={12}>
-                        <Grid container direction="column" alignItems="center">
-                          <div className={classes.boldletter}>Books</div>
-                          <Button
-                            color="secondary"
-                            variant="contained"
-                            className={classes.button}
-                            onClick={handleTextbookCheckedRight}
-                            disabled={textbookleftChecked.length === 0}
-                            aria-label="move selected right"
-                          >
-                            &gt;
-                          </Button>
-                          <Button
-                            color="secondary"
-                            variant="contained"
-                            className={classes.button}
-                            onClick={handleTextbookCheckedLeft}
-                            disabled={textbookrightChecked.length === 0}
-                            aria-label="move selected left"
-                          >
-                            &lt;
-                          </Button>
-                        </Grid>
-                      </Grid>
-                      <Grid item md={5} xs={12}>{textbooksRightList('textbookright', textbookright)}</Grid>
                     </Grid> */}
+
                     <Grid item xs={12} className={classes.row_container}>
                       <div>
                         <FormControlLabel

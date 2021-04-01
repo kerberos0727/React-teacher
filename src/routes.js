@@ -235,7 +235,8 @@ const routes = [
         path: {
           value: 'urlBillDetail',
           params: {
-            billId: ':billId'
+            billId: ':billId',
+            billNum: ':billNum',
           }
         },
         component: lazy(() => import('src/views/bills/DetailsView'))

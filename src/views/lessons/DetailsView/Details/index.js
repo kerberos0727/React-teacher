@@ -28,8 +28,8 @@ const Details = ({ lesson, textbooks, students, className }) => {
 Details.propTypes = {
 	className: PropTypes.string,
 	lesson: PropTypes.object.isRequired,
-	textbooks: PropTypes.object.isRequired,
-	students: PropTypes.object.isRequired
+	textbooks: PropTypes.array.isRequired,
+	students: PropTypes.array.isRequired
 };
 
 export default Details;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import FilterListIcon from '@material-ui/icons/FilterList';
+import Autocomplete from '@material-ui/lab/Autocomplete';
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
 import { Link as RouterLink } from 'react-router-dom';
@@ -12,49 +12,80 @@ import {
   SvgIcon,
   Checkbox,
   TableRow,
-  useTheme,
   TableBody,
   TableCell,
   TableHead,
-  TextField,
   makeStyles,
   IconButton,
-  InputAdornment,
   TablePagination,
+  withStyles
 } from '@material-ui/core';
 import {
   Edit as EditIcon,
   Search as SearchIcon
 } from 'react-feather';
 import { useSnackbar } from 'notistack';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
 import Grid from '@material-ui/core/Grid';
 import {
   KeyboardDatePicker,
 } from '@material-ui/pickers';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
-
+import FixedTextField from '../../../components/FixedTextField'
+import 'src/components/global';
 /* utils */
 import {
   applySort,
-  handleDelete,
   applyFilters,
-  getComparator,
   applyPagination,
   sortOptionsDefault,
-  descendingComparator,
-  handleDeleteAllSelected,
 } from 'src/utils/defaultTableSettings';
 
 /* connectIntl */
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
+import {
+  getAllStorageUsers
+} from 'src/localstorage';
+
+var { global_allusers } = getAllStorageUsers();
+
+const CssTextField = withStyles({
+  root: {
+    '& label': {
+      fontStyle: 'normal',
+      fontWeight: 600,
+      fontSize: 20,
+      alignItems: 'center',
+      textAlign: 'center',
+      color: '#333',
+      transform: 'translate(22px, 16px) scale(1)'
+    },
+
+    '& label.Mui-focused': {
+      color: '#333',
+    },
+    '& .MuiInput-underline:after': {
+      borderBottomColor: '#fff',
+    },
+    '& .MuiOutlinedInput-root': {
+      '& fieldset': {
+        border: '1px solid#333',
+        borderRadius: '10px',
+        height: 50
+      },
+      '&:hover fieldset': {
+        borderColor: '#333',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#333',
+      },
+    },
+  },
+})(FixedTextField);
 
 const useStyles = makeStyles((theme) => ({
   root: {},
   queryField: {
-    width: 500
+    // width: 500
   },
   bulkOperations: {
     position: 'relative'
@@ -80,7 +111,7 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: 'bold',
   },
   row_container: {
-    width: '100%',
+    // width: '100%',
     display: 'flex',
     flexWrap: 'wrap',
     justifyContent: 'space-around',
@@ -103,12 +134,13 @@ const Results = ({
   intl,
   bills,
   totalcount,
+  totalPrice,
   className,
   deleteBill,
   deleteBills,
-  handleGetData
+  handleGetData,
+  handleSearchData
 }) => {
-  const theme = useTheme();
   const classes = useStyles();
   const [filters] = useState({});
   const [page, setPage] = useState(0);
@@ -117,17 +149,41 @@ const Results = ({
   const { enqueueSnackbar } = useSnackbar();
   const [selectedBills, setSelectedBills] = useState([]);
   const [sort, setSort] = useState(sortOptionsDefault[2].value);
-  const [filteropen, setFilterOpen] = React.useState(false);
   const [selectedDate, setSelectedDate] = React.useState(new Date());
+  const [searchVals, setSearchvals] = React.useState({
+    user: '',
+    startDate: '',
+    endDate: '',
+    cash: false,
+    other: false,
+    card: false,
+    transfer: false,
+    company: false,
+  });
+  const [user, setUser] = React.useState('')
 
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
-  };
-
-  const handleQueryChange = (event) => {
-    event.persist();
-    setQuery(event.target.value);
-  };
+  const handlegetTypeint = () => {
+    let typeInt = 0;
+    if (searchVals.cash) {
+      typeInt = typeInt | 1;
+    }
+    if (searchVals.card) {
+      typeInt = typeInt | 2;
+    }
+    if (searchVals.other) {
+      typeInt = typeInt | 4;
+    }
+    if (searchVals.transfer) {
+      typeInt = typeInt | 8;
+    }
+    if (searchVals.company) {
+      typeInt = typeInt | 16;
+    }
+    if (typeInt == 15) {
+      typeInt = 0;
+    }
+    return typeInt;
+  }
 
   const handleSelectAllBills = (event) => {
     setSelectedBills(event.target.checked
@@ -145,12 +201,20 @@ const Results = ({
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
-    handleGetData(parseInt(newPage + '0'), limit);
+    let data = { searchVals: searchVals, typeInt: handlegetTypeint(), pagenum: parseInt(newPage + '0'), limitnum: limit }
+    if (searchVals.user !== '' || searchVals.startDate !== '' || searchVals.endDate !== '' || searchVals.cash !== false || searchVals.other !== false || searchVals.card !== false || searchVals.transfer !== false || searchVals.company !== false)
+      handleSearchData(data);
+    else
+      handleGetData(parseInt(newPage + '0'), limit);
   };
 
   const handleLimitChange = (event) => {
     setLimit(parseInt(event.target.value));
-    handleGetData(page, event.target.value);
+    let data = { searchVals: searchVals, typeInt: handlegetTypeint(), pagenum: page, imitnum: event.target.value }
+    if (searchVals.user !== '' || searchVals.startDate !== '' || searchVals.endDate !== '' || searchVals.cash !== false || searchVals.other !== false || searchVals.card !== false || searchVals.transfer !== false || searchVals.company !== false)
+      handleSearchData(data);
+    else
+      handleGetData(page, event.target.value);
   };
 
   const filteredBills = applyFilters(bills, query, filters);
@@ -160,154 +224,179 @@ const Results = ({
   const selectedSomeBills = selectedBills.length > 0 && selectedBills.length < bills.length;
   const selectedAllBills = selectedBills.length === bills.length;
 
+  useEffect(() => {
+    let data = { searchVals: searchVals, typeInt: handlegetTypeint(), pagenum: 0, limitnum: 10 }
+    if (searchVals.user === '' && searchVals.startDate === '' && searchVals.endDate === '' && searchVals.cash === false && searchVals.other === false && searchVals.card === false && searchVals.transfer === false && searchVals.company === false) {
+      handleGetData(0, 10)
+    }
+    handleSearchData(data);
+  }, [searchVals])
+
+  const handleChangeSearchvals = (name, value) => {
+    let newdata = { ...searchVals }
+    switch (name) {
+      case 'users':
+        let data = global.Allusers.length !== 0 ? global.Allusers : JSON.parse(global_allusers);
+        if (value !== null) {
+          for (let i = 0; i < data.length; i++) {
+            if (data[i].name === value.name) {
+              setUser(value);
+              newdata.user = data[i].id
+            }
+          }
+        } else {
+          newdata.user = '';
+          setUser('');
+        }
+        break;
+      case 'startDate':
+        newdata.startDate = value;
+        break;
+      case 'endDate':
+        newdata.endDate = value;
+        break;
+      case 'cash':
+        newdata.cash = value;
+        break;
+      case 'other':
+        newdata.other = value;
+        break;
+      case 'card':
+        newdata.card = value;
+        break;
+      case 'transfer':
+        newdata.transfer = value;
+        break;
+      case 'company':
+        newdata.company = value;
+        break;
+    }
+    setSearchvals(newdata)
+  };
+
+  const handlegetBillnumber = (Dtime, num, type) => {
+    let typeString = 'TR', billNumber = '';
+    if (type === 1)
+      typeString = "E";
+    if (type === 2)
+      typeString = "T";
+    if (type === 4)
+      typeString = "O";
+    if (type === 16)
+      typeString = "EM";
+    if (type === 32)
+      billNumber = "Pro Forma";
+    else
+      billNumber = typeString + "-" + Dtime.substr(0, 2) + "-" + num;
+    return billNumber;
+  }
+
   return (
     <Card className={clsx(classes.root, className)} >
-      <div>
-        <Dialog
-          open={filteropen}
-          onClose={() => { setFilterOpen(false) }}
-          aria-labelledby="alert-dialog-title"
-          aria-describedby="alert-dialog-description"
-        >
-          <DialogContent>
-            <Grid container >
-              <div className={classes.boldletter} style={{ fontSize: 20, width: '100%', marginBottom: 30, paddingBottom: 25, borderBottom: '2px solid rgb(214,227,224)' }}>Search Bills:</div>
-              <Grid container style={{
-                marginBottom: 30, paddingBottom: 25, borderBottom: '2px solid rgb(214,227,224)'
-              }}>
-                <Grid item xs={12} sm={6}>
-                  <div className={classes.row_container}>
-                    <div className={classes.boldletter}>Start Date:</div>
-                    <KeyboardDatePicker
-                      required
-                      format="MM/DD/YYYY"
-                      name="startDate"
-                      value={selectedDate}
-                      style={{ width: '65%' }}
-                      onChange={handleDateChange}
-                    />
-                  </div>
-                  <div className={classes.row_container}>
-                    <div className={classes.boldletter}>End Date:</div>
-                    <KeyboardDatePicker
-                      required
-                      format="MM/DD/YYYY"
-                      name="startDate"
-                      value={selectedDate}
-                      style={{ width: '65%' }}
-                      onChange={handleDateChange}
-                    />
-                  </div>
-                  {/* <div style={{ textAlign: 'right' }}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          name="ignore_dates"
-                          color="primary"
-                        />
-                      }
-                      label="Ignore dates "
-                    />
-                  </div> */}
-                </Grid>
-                < Grid item xs={12} sm={6} style={{ paddingLeft: 10 }}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        name="cash"
-                        color="primary"
-                      />
-                    }
-                    label="Cash "
-                  />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        name="other"
-                        color="primary"
-                      />
-                    }
-                    label="Other "
-                  />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        name="card"
-                        color="primary"
-                      />
-                    }
-                    label="Card "
-                  />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        name="transfer"
-                        color="primary"
-                      />
-                    }
-                    label="Transfer "
-                  />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        name="company"
-                        color="primary"
-                      />
-                    }
-                    label="Company "
-                  />
-                  <div className={classes.totalcontainer}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          name="ignore_dates"
-                          color="primary"
-                        />
-                      }
-                      label="Ignore dates "
-                    />
-                    <div className={classes.boldletter}>Total:</div>
-                    <div>7 867,40 €</div>
-                  </div>
-                </Grid>
-              </Grid>
+      <Box p={2} >
+        <Grid container >
+          <div className={classes.boldletter} style={{ fontSize: 20, width: '100%', marginBottom: 30, paddingBottom: 25, borderBottom: '2px solid rgb(214,227,224)' }}>Search Bills:</div>
+          <Grid container style={{
+            marginBottom: 30, paddingBottom: 25, borderBottom: '2px solid rgb(214,227,224)'
+          }}>
+            <Grid item xs={12} style={{ width: '100%', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+              <Autocomplete
+                name="users"
+                options={global.Allusers.length !== 0 ? global.Allusers : JSON.parse(global_allusers)}
+                getOptionLabel={(option) => option.name}
+                style={{ width: 230, height: 50 }}
+                renderInput={(params) => <CssTextField {...params} label="User" variant="outlined" />}
+                onChange={(event, value) => { handleChangeSearchvals('users', value) }}
+                value={user}
+              />
+              <div className={classes.row_container}>
+                <div className={classes.boldletter}>Start Date:</div>
+                <KeyboardDatePicker
+                  required
+                  format="MM/DD/YYYY"
+                  name="startDate"
+                  value={selectedDate}
+                  style={{ width: '65%' }}
+                  value={searchVals.startDate}
+                  onChange={(date) => handleChangeSearchvals('startDate', date)}
+                />
+              </div>
+              <div className={classes.row_container}>
+                <div className={classes.boldletter}>End Date:</div>
+                <KeyboardDatePicker
+                  required
+                  format="MM/DD/YYYY"
+                  name="endDate"
+                  value={selectedDate}
+                  style={{ width: '65%' }}
+                  value={searchVals.endDate}
+                  onChange={(date) => handleChangeSearchvals('endDate', date)}
+                />
+              </div>
             </Grid>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => { setFilterOpen(false) }} color="primary">
-              Disagree
-            </Button>
-            <Button onClick={() => { setFilterOpen(false) }} color="primary">
-              Agree
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </div>
-      <Box p={2} minHeight={56} display="flex" alignItems="center" justifyContent='space-between' >
-        <TextField
-          className={classes.queryField}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SvgIcon
-                  fontSize="small"
-                  color="action"
-                >
-                  <SearchIcon />
-                </SvgIcon>
-              </InputAdornment>
-            )
-          }}
-          value={query}
-          variant="outlined"
-          onChange={handleQueryChange}
-          placeholder={formatMessage(intl.search)}
-        />
-        <FilterListIcon
-          style={{ cursor: 'pointer' }}
-          onClick={() => { setFilterOpen(true) }}
-          title="Filter"
-        />
+            < Grid item xs={12} style={{ paddingLeft: 10 }} style={{ width: '100%', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    name="cash"
+                    color="primary"
+                    value={searchVals.cash}
+                    onChange={(e) => handleChangeSearchvals('cash', !searchVals.cash)}
+                  />
+                }
+                label="Cash "
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    name="other"
+                    color="primary"
+                    value={searchVals.other}
+                    onChange={(e) => handleChangeSearchvals('other', !searchVals.other)}
+                  />
+                }
+                label="Other "
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    name="card"
+                    color="primary"
+                    value={searchVals.card}
+                    onChange={(e) => handleChangeSearchvals('card', !searchVals.card)}
+                  />
+                }
+                label="Card "
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    name="transfer"
+                    color="primary"
+                    value={searchVals.transfer}
+                    onChange={(e) => handleChangeSearchvals('transfer', !searchVals.transfer)}
+                  />
+                }
+                label="Transfer "
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    name="company"
+                    color="primary"
+                    value={searchVals.company}
+                    onChange={(e) => handleChangeSearchvals('company', !searchVals.company)}
+                  />
+                }
+                label="Company "
+              />
+              <div className={classes.totalcontainer}>
+                <div className={classes.boldletter}>Total:</div>
+                <div>{totalPrice} €</div>
+              </div>
+            </Grid>
+          </Grid>
+        </Grid>
       </Box>
       {enableBulkOperations && (
         <div className={classes.bulkOperations}>
@@ -403,17 +492,17 @@ const Results = ({
                     </TableCell>
 
                     <TableCell align="center">
-                      {n.billNumber}
+                      {handlegetBillnumber(n.dTime, n.billNumber, n.type)}
                     </TableCell>
 
                     <TableCell align="center">
-                      {(n.cents / 100).toFixed(2)}€
+                      {n.price}
                     </TableCell>
 
                     <TableCell align="center">
                       <IconButton
                         component={RouterLink}
-                        to={formatMessage(intl.urlBillDetail, { billId: n.id })}
+                        to={formatMessage(intl.urlBillDetail, { billId: n.id, billNum: handlegetBillnumber(n.dTime, n.billNumber, n.type) })}
                         title="Detail"
                       >
                         <SvgIcon fontSize="small">
@@ -444,12 +533,14 @@ const Results = ({
 Results.propTypes = {
   className: PropTypes.string,
   bills: PropTypes.array.isRequired,
-  totalcount: PropTypes.number
+  totalcount: PropTypes.number,
+  totalPrice: PropTypes.number
 };
 
 Results.defaultProps = {
   bills: [],
-  totalcount: 0
+  totalcount: 0,
+  totalPrice: 0
 };
 
 const mapStateToProps = (store) => ({

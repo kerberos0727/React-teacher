@@ -18,3 +18,4 @@ global.topics = [];
 global.Alltopics = [];
 global.students = [];
 global.Allstudents = [];
+global.Allusers = [];

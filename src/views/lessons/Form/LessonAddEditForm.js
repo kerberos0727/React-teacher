@@ -32,17 +32,42 @@ import {
   KeyboardDatePicker,
   KeyboardTimePicker
 } from '@material-ui/pickers';
-/* utils */
-import {
-  formatDate,
-  printErrors,
-} from 'src/utils';
 import httpClient from 'src/utils/httpClient';
 import 'src/components/global';
 import useIsMountedRef from 'src/hooks/useIsMountedRef';
 
 /* connectIntl */
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
+
+import {
+  getLanguages,
+  getAllLanguages,
+  getLevels,
+  getAllLevels,
+  getGroups,
+  getAllGroups,
+  getAllLessontextbooks,
+  getTeachers,
+  getAllTeachers,
+  getLessoninfos,
+  getTopics,
+  getAllLessoninfos,
+  getAllStudents
+} from 'src/localstorage';
+
+var { global_groups } = getGroups();
+var { global_allgroups } = getAllGroups();
+var { global_levels } = getLevels();
+var { global_alllevels } = getAllLevels();
+var { global_languages } = getLanguages();
+var { global_alllanguages } = getAllLanguages();
+var { global_alllessontextbooks } = getAllLessontextbooks();
+var { global_teachers } = getTeachers();
+var { global_allteachers } = getAllTeachers();
+var { global_lessoninfos } = getLessoninfos();
+var { global_topics } = getTopics();
+var { global_alllessoninfos } = getAllLessoninfos();
+var { global_allstudents } = getAllStudents();
 
 function not(a, b) {
   return a.filter((value) => b.indexOf(value) === -1);
@@ -347,7 +372,7 @@ const LessonAddEditForm = ({ lesson, textbooks, students, topics, update, intl }
   const [state_textbooks, setStateTextbooks] = React.useState(textbooks)
 
   const [studentchecked, setStudentChecked] = React.useState([]);
-  const [totalstudents, setTotalStudents] = React.useState(global.Allstudents);
+  const [totalstudents, setTotalStudents] = React.useState(global.Allstudents.length !== 0 ? global.Allstudents : JSON.parse(global_allstudents));
   const [leftStudents, setLeftStudnets] = React.useState(totalstudents);
   const [selectedstudents, setSelectedStudnets] = React.useState(students);
   const [rightStudnets, setRightStudnets] = React.useState(selectedstudents);
@@ -454,23 +479,28 @@ const LessonAddEditForm = ({ lesson, textbooks, students, topics, update, intl }
       onSubmit={
         async (values, { setErrors }) => {
           let levelId, languageId, teacherId, lessoninfoId, groupnameId;
-          global.Allteachers.map((val) => {
+          let jsonallteacher = global.Allteachers.length !== 0 ? global.Allteachers : JSON.parse(global_allteachers);
+          jsonallteacher.map((val) => {
             if (val.name === combovalues.teacher)
               teacherId = val.id
           })
-          global.Allclassis.map((val) => {
+          let jsonalllevels = global.Allclassis.length !== 0 ? global.Allclassis : JSON.parse(global_alllevels);
+          jsonalllevels.map((val) => {
             if (val.name === combovalues.level)
               levelId = val.id
           })
-          global.Alllanguages.map((val) => {
+          let jsonalllanguages = global.Alllanguages.length !== 0 ? global.Alllanguages : JSON.parse(global_alllanguages);
+          jsonalllanguages.map((val) => {
             if (val.name === combovalues.language)
               languageId = val.id
           })
-          global.Allgroups.map((val) => {
+          let jsonallgroups = global.Allgroups.length !== 0 ? global.Allgroups : JSON.parse(global_allgroups);
+          jsonallgroups.map((val) => {
             if (val.name === combovalues.groupName)
               groupnameId = val.id
           })
-          global.Alllessoninfos.map((val) => {
+          let jsonalllessoninfos = global.Alllessoninfos.length !== 0 ? global.Alllessoninfos : JSON.parse(global_alllessoninfos);
+          jsonalllessoninfos.map((val) => {
             if (val.name === combovalues.lessoninfo)
               lessoninfoId = val.id
           })
@@ -586,7 +616,7 @@ const LessonAddEditForm = ({ lesson, textbooks, students, topics, update, intl }
                               <div className={classes.boldletter}>Teacher:</div>
                               <Autocomplete
                                 id="teacher"
-                                options={global.teachers}
+                                options={global.teachers.length !== 0 ? global.teachers : JSON.parse(global_teachers)}
                                 getOptionLabel={(option) => option}
                                 style={{ width: '65%', height: 50 }}
                                 renderInput={(params) => <CssTextField {...params} />}
@@ -601,7 +631,7 @@ const LessonAddEditForm = ({ lesson, textbooks, students, topics, update, intl }
                               <div className={classes.boldletter}>Level:</div>
                               <Autocomplete
                                 id="level"
-                                options={global.classis}
+                                options={global.classis.length !== 0 ? global.classis : JSON.parse(global_levels)}
                                 getOptionLabel={(option) => option}
                                 style={{ width: '65%', height: 50 }}
                                 renderInput={(params) => <CssTextField {...params} />}
@@ -617,7 +647,7 @@ const LessonAddEditForm = ({ lesson, textbooks, students, topics, update, intl }
                               <div className={classes.boldletter}>Language:</div>
                               <Autocomplete
                                 id="language"
-                                options={global.languages}
+                                options={global.languages.length !== 0 ? global.languages : JSON.parse(global_languages)}
                                 getOptionLabel={(option) => option}
                                 style={{ width: '65%', height: 50 }}
                                 renderInput={(params) => <CssTextField {...params} />}
@@ -632,7 +662,7 @@ const LessonAddEditForm = ({ lesson, textbooks, students, topics, update, intl }
                               <div className={classes.boldletter}>Info:</div>
                               <Autocomplete
                                 id="lessoninfo"
-                                options={global.lessoninfos}
+                                options={global.lessoninfos.length !== 0 ? global.lessoninfos : JSON.parse(global_lessoninfos)}
                                 getOptionLabel={(option) => option}
                                 style={{ width: '65%', height: 50 }}
                                 renderInput={(params) => <CssTextField {...params} />}
@@ -648,7 +678,7 @@ const LessonAddEditForm = ({ lesson, textbooks, students, topics, update, intl }
                               <div className={classes.boldletter}>Group:</div>
                               <Autocomplete
                                 id="groupName"
-                                options={global.groups}
+                                options={global.groups.length !== 0 ? global.groups : JSON.parse(global_groups)}
                                 getOptionLabel={(option) => option}
                                 style={{ width: '65%', height: 50 }}
                                 renderInput={(params) => <CssTextField {...params} />}
@@ -663,7 +693,7 @@ const LessonAddEditForm = ({ lesson, textbooks, students, topics, update, intl }
                               <Grid item md={5} xs={12}>
                                 <Autocomplete
                                   id="topic"
-                                  options={global.topics}
+                                  options={global.topics.length !== 0 ? global.topics : JSON.parse(global_topics)}
                                   getOptionLabel={(option) => option}
                                   style={{ width: '95%', height: 50 }}
                                   renderInput={(params) => <CssTextField {...params} />}
@@ -724,12 +754,13 @@ const LessonAddEditForm = ({ lesson, textbooks, students, topics, update, intl }
                                     </TableHead>
                                     <TableBody>
                                       {state_topics.map((row, index) => (
-                                        <StyledTableRow key={row.index}
+                                        <StyledTableRow
+                                          key={index}
                                           style={{ cursor: 'pointer' }}
                                           onClick={() => { handleChangeEtopicsEdit(row) }}
                                         >
-                                          <StyledTableCell className={classes.ellipsis} key={row.index + 1}>{row.name}</StyledTableCell>
-                                          <StyledTableCell key={row.index + 2}>{row.homework}</StyledTableCell>
+                                          <StyledTableCell className={classes.ellipsis} key={index + 1}>{row.name}</StyledTableCell>
+                                          <StyledTableCell key={index + 2}>{row.homework}</StyledTableCell>
                                         </StyledTableRow>
                                       ))}
                                     </TableBody>
@@ -746,7 +777,7 @@ const LessonAddEditForm = ({ lesson, textbooks, students, topics, update, intl }
                               <Grid item md={8} xs={12}>
                                 <Autocomplete
                                   id="textbooks"
-                                  options={global.Alllessontextbooks}
+                                  options={global.Alllessontextbooks.length !== 0 ? global.Alllessontextbooks : JSON.parse(global_alllessontextbooks)}
                                   getOptionLabel={(option) => option.textBookName}
                                   style={{ width: '100%', height: 50 }}
                                   renderInput={(params) => <CssTextField {...params} />}
@@ -846,11 +877,11 @@ const LessonAddEditForm = ({ lesson, textbooks, students, topics, update, intl }
                                       style={{ cursor: 'pointer' }}
                                       onClick={() => { handleChangeEtextbookEdit(row) }}
                                     >
-                                      <StyledTableCell className={classes.ellipsis} key={row.index + 1}>{row.textBookName}</StyledTableCell>
-                                      <StyledTableCell key={row.index + 2}>{row.unit}</StyledTableCell>
-                                      <StyledTableCell key={row.index + 3}>{row.pages}</StyledTableCell>
-                                      <StyledTableCell key={row.index + 4}>{row.exercise}</StyledTableCell>
-                                      <StyledTableCell key={row.index + 5}>{row.homework}</StyledTableCell>
+                                      <StyledTableCell className={classes.ellipsis} key={index + 1}>{row.textBookName}</StyledTableCell>
+                                      <StyledTableCell key={index + 2}>{row.unit}</StyledTableCell>
+                                      <StyledTableCell key={index + 3}>{row.pages}</StyledTableCell>
+                                      <StyledTableCell key={index + 4}>{row.exercise}</StyledTableCell>
+                                      <StyledTableCell key={index + 5}>{row.homework}</StyledTableCell>
                                     </StyledTableRow>
                                   ))}
                                 </TableBody>

@@ -14,6 +14,10 @@ import FormControl from '@material-ui/core/FormControl';
 import {
     KeyboardDatePicker,
 } from '@material-ui/pickers';
+import {
+    getLevels
+} from 'src/localstorage';
+var { global_levels } = getLevels();
 
 const CssTextField = withStyles({
     root: {
@@ -110,7 +114,7 @@ const GroupComponent = () => {
                         </RadioGroup>
                     </FormControl>
                     <Autocomplete
-                        options={global.classis}
+                        options={global.classis.length !== 0 ? global.classis : JSON.parse(global_levels)}
                         getOptionLabel={(option) => option}
                         className={classes.recomment_combo}
                         renderInput={(params) => <CssTextField {...params} />}
@@ -180,7 +184,7 @@ const GroupComponent = () => {
                         </RadioGroup>
                     </FormControl>
                     <Autocomplete
-                        options={global.classis}
+                        options={global.classis.length !== 0 ? global.classis : JSON.parse(global_levels)}
                         getOptionLabel={(option) => option}
                         className={classes.recomment_combo}
                         renderInput={(params) => <CssTextField {...params} />}
@@ -236,7 +240,7 @@ const GroupComponent = () => {
                             <Checkbox
                                 name="to_date"
                                 color="primary"
-                                style={{ padding: 5, margin:10 }}
+                                style={{ padding: 5, margin: 10 }}
                             />
                         }
                         label="To"

@@ -7,6 +7,28 @@ import { useSnackbar } from 'notistack';
 import { useHistory, Redirect } from 'react-router-dom'
 import httpClient from 'src/utils/httpClient';
 import SplashScreen from 'src/components/SplashScreen';
+import {
+  setLevels,
+  setAllLevels,
+  setLanguages,
+  setAllLanguages,
+  setHowdidyouhear,
+  setAllHowdidyouhear,
+  setGroups,
+  setAllGroups,
+  setTextbooks,
+  setAllTextbooks,
+  setAllLessontextbooks,
+  setPersonGroupinfo,
+  setTeachers,
+  setAllTeachers,
+  setLessoninfos,
+  setAllLessoninfos,
+  setTopics,
+  setAllTopics,
+  setStudents,
+  setAllStudents
+} from 'src/localstorage';
 
 /* connectIntl */
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
@@ -219,6 +241,26 @@ export const AuthProviderWrapper = ({ children, intl }) => {
 
   const logout = () => {
     setSession(null);
+    setLevels(null);
+    setAllLevels(null);
+    setLanguages(null);
+    setAllLanguages(null);
+    setHowdidyouhear(null);
+    setAllHowdidyouhear(null);
+    setGroups(null);
+    setAllGroups(null);
+    setTextbooks(null);
+    setAllTextbooks(null);
+    setAllLessontextbooks(null);
+    setPersonGroupinfo(null);
+    setTeachers(null);
+    setAllTeachers(null);
+    setLessoninfos(null);
+    setAllLessoninfos(null);
+    setTopics(null);
+    setAllTopics(null);
+    setStudents(null);
+    setAllStudents(null);
     dispatch({ type: 'LOGOUT' });
   };
 

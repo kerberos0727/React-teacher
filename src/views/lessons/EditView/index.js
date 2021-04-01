@@ -43,6 +43,7 @@ const LessonEditView = ({ match, intl }) => {
       .then(json => {
         if (json.success && isMountedRef.current) {
           setLesson(json.lesson[0]);
+          // console.log('json.lesson[0]--->', json.lesson[0].startTime);
         }
       })
       .catch((error) => {
@@ -91,8 +92,7 @@ const LessonEditView = ({ match, intl }) => {
     getStudents();
     getTopics();
     getLesson();
-    
-  }, [getLesson]);
+  }, [getLesson, getTopics, getStudents, getTextbooks]);
 
   if (!lesson) {
     return null;

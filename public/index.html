@@ -14,6 +14,11 @@
     <meta name="author" content="Devias IO" />
 
     <style>
+        .MuiDialogContent-root {
+            padding: 0 !important;
+            width: 400px !important;
+        }
+
         .MuiTableCell-root {
             padding-top: 0px !important;
         }
@@ -53,6 +58,7 @@
             color: #000 !important;
             background-color: #cbd6f5 !important;
         }
+
         /* profile avatar image upload start */
         .img-wrap {
             position: relative;
@@ -92,6 +98,21 @@
             cursor: pointer;
             background: linear-gradient(200deg, #3fa1a9, #79f1a4);
             margin-bottom: 25px;
+        }
+
+        #alert-confirm-title h2 {
+            font-size: 24px !important;
+        }
+
+        #alert-confirm-description {
+            padding-left: 30px !important;
+            padding-right: 30px !important;
+        }
+
+        @media screen and (max-width: 470px) {
+            .MuiDialogContent-root {
+                width: initial !important;
+            }
         }
 
         /* profile avatar image upload end */

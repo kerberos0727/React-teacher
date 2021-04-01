@@ -23,6 +23,10 @@ import Paper from '@material-ui/core/Paper';
 
 /* connectIntl */
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
+import {
+  getLevels
+} from 'src/localstorage';
+var { global_levels } = getLevels();
 
 const CssTextField = withStyles({
   root: {
@@ -213,7 +217,7 @@ const GroupInfo = ({ group, intl }) => {
               <div className={classes.boldletter}>Students Level:</div>
               <Autocomplete
                 id="payments"
-                options={global.classis}
+                options={global.classis.length !== 0 ? global.classis : JSON.parse(global_levels)}
                 getOptionLabel={(option) => option}
                 className={classes.combobox}
                 renderInput={(params) => <CssTextField {...params} />}

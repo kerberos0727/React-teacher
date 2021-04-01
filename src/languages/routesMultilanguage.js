@@ -45,7 +45,7 @@ export default function routes(keyGen) {
 		},
 		urlBillDetail: {
 			key: keyGen(),
-			defaultMessage: '/app/bill/{builId}/detail'
+			defaultMessage: '/app/bill/{billId}/{billNum}/detail'
 		},
 		// bill end
 

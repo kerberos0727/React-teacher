@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
@@ -12,7 +12,6 @@ import {
   SvgIcon,
   Checkbox,
   TableRow,
-  useTheme,
   TableBody,
   TableCell,
   TableHead,
@@ -28,18 +27,14 @@ import {
 } from 'react-feather';
 import { useSnackbar } from 'notistack';
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
-import EqualizerIcon from '@material-ui/icons/Equalizer';
+import Grid from '@material-ui/core/Grid';
 
 /* utils */
 import {
   applySort,
-  handleDelete,
   applyFilters,
-  getComparator,
   applyPagination,
   sortOptionsDefault,
-  descendingComparator,
-  handleDeleteAllSelected,
 } from 'src/utils/defaultTableSettings';
 
 /* connectIntl */
@@ -48,7 +43,8 @@ import { connectIntl, formatMessage } from 'src/contexts/Intl';
 const useStyles = makeStyles((theme) => ({
   root: {},
   queryField: {
-    width: 500
+    width: 450,
+    "@media (max-width: 500px)": { width: '100%' },
   },
   bulkOperations: {
     position: 'relative'
@@ -79,7 +75,6 @@ const Results = ({
   deleteGroup,
   deleteGroups,
 }) => {
-  const theme = useTheme();
   const classes = useStyles();
   const [filters] = useState({});
   const [page, setPage] = useState(0);
@@ -130,7 +125,7 @@ const Results = ({
 
   return (
     <Card className={clsx(classes.root, className)} >
-      <Box p={2} minHeight={56} display="flex" alignItems="center" >
+      <Box p={2} alignItems="center" >
         <TextField
           className={classes.queryField}
           InputProps={{
@@ -150,62 +145,65 @@ const Results = ({
           onChange={handleQueryChange}
           placeholder={formatMessage(intl.search)}
         />
-        <div style={{ marginLeft: 10 }}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                name="show_groups"
-                color="primary"
-              />
-            }
-            label="Show Groups"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                name="show_primary"
-                color="primary"
-              />
-            }
-            label="Show Private"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                name="hour"
-                color="primary"
-              />
-            }
-            label="1 hour"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                name="days"
-                color="primary"
-              />
-            }
-            label="2 days"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                name="fri"
-                color="primary"
-              />
-            }
-            label="Fri"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                name="sat"
-                color="primary"
-              />
-            }
-            label="Sat"
-          />
-        </div>
+        <Grid container >
+          <Grid item xs={12} style={{ width: '100%', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="show_groups"
+                  color="primary"
+                />
+              }
+              label="Show Groups"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="show_primary"
+                  color="primary"
+                />
+              }
+              label="Show Private"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="hour"
+                  color="primary"
+                />
+              }
+              label="1 hour"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="days"
+                  color="primary"
+                />
+              }
+              label="2 days"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="fri"
+                  color="primary"
+                />
+              }
+              label="Fri"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="sat"
+                  color="primary"
+                />
+              }
+              label="Sat"
+            />
+          </Grid>
+        </Grid>
+
       </Box>
       {enableBulkOperations && (
         <div className={classes.bulkOperations}>
