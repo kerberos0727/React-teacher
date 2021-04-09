@@ -1,11 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import clsx from 'clsx';
 import { Formik } from 'formik';
 import PropTypes from 'prop-types';
 import {
   Grid,
   Card,
-  CardHeader,
   Button,
   makeStyles,
   CardContent,
@@ -18,10 +17,17 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
-import Divider from '@material-ui/core/Divider';
 import List from '@material-ui/core/List';
-/* connectIntl */
-import { connectIntl } from 'src/contexts/Intl';
+import { connectIntl, formatMessage } from 'src/contexts/Intl';
+import Paper from '@material-ui/core/Paper';
+import httpClient from 'src/utils/httpClient';
+import { useHistory } from 'react-router';
+import useIsMountedRef from 'src/hooks/useIsMountedRef';
+import { useSnackbar } from 'notistack';
+import {
+  getAllStudents
+} from 'src/localstorage';
+var { global_allstudents } = getAllStudents();
 
 function not(a, b) {
   return a.filter((value) => b.indexOf(value) === -1);
@@ -108,24 +114,77 @@ const useStyles = makeStyles((theme) => ({
   inputStyle: {
     height: 50, width: 200, marginRight: 10,
     "@media (max-width: 414px)": { width: '100%' }
-  }
+  },
+  list: {
+    width: '100%',
+    height: 420,
+    backgroundColor: theme.palette.background.paper,
+    overflow: 'auto',
+  },
+  transfer_root: {
+    margin: 'auto',
+    marginBottom: 15
+  },
 }));
 
-const TextbookAddEditForm = ({ textbook, update, intl }) => {
+const TextbookAddEditForm = ({ textbook, students, update, intl }) => {
   const classes = useStyles();
-  const [textbookitems, setTextbookitems] = React.useState([]);
+  const isMountedRef = useIsMountedRef();
+  const { enqueueSnackbar } = useSnackbar();
+  const history = useHistory();
+  const [textbookid, setTextbookid] = React.useState(0)
+  const [searchVal, setSearchVal] = React.useState({
+    name: '',
+    active: false
+  });
+
+  const handleChangeSearchVal = (name, value) => {
+    let data = { ...searchVal };
+    if (name === 'name') {
+      data.name = value.target.value;
+    }
+    else {
+      data.active = value;
+    }
+    setSearchVal(data);
+    handleSearch(data);
+  }
+
+  const handleSearch = (demodata) => {
+    let data = { searchVals: demodata, pagenum: 0, limitnum: 1000 }
+    const url = `api/student/search`
+    const method = 'post';
+    httpClient[method](url, data)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          setLeftStudnets(json.students);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
 
   // transfer list for start
-  const [checked, setChecked] = React.useState([]);
-  const [left, setLeft] = React.useState([0, 1, 2, 3]);
-  const [right, setRight] = React.useState([4, 5, 6, 7]);
+  const [studentchecked, setStudentChecked] = React.useState([]);
+  const [totalstudents, setTotalStudents] = React.useState(global.Allstudents.length !== 0 ? global.Allstudents : JSON.parse(global_allstudents));
+  const [leftStudents, setLeftStudnets] = React.useState(totalstudents);
+  const [selectedstudents, setSelectedStudnets] = React.useState(students);
+  const [rightStudnets, setRightStudnets] = React.useState(selectedstudents);
+  const [oldstudents, setOldStudnets] = React.useState(selectedstudents);
+  const studentsleftChecked = intersection(studentchecked, leftStudents);
+  const studentsrightChecked = intersection(studentchecked, rightStudnets);
 
-  const leftChecked = intersection(checked, left);
-  const rightChecked = intersection(checked, right);
+  useEffect(() => {
+    setSelectedStudnets(students);
+    setRightStudnets(students);
+    setOldStudnets(students);
+    setTextbookid(textbook.id)
+  }, [students])
 
   const handleToggle = (value) => () => {
-    const currentIndex = checked.indexOf(value);
-    const newChecked = [...checked];
+    const currentIndex = studentchecked.indexOf(value);
+    const newChecked = [...studentchecked];
 
     if (currentIndex === -1) {
       newChecked.push(value);
@@ -133,81 +192,97 @@ const TextbookAddEditForm = ({ textbook, update, intl }) => {
       newChecked.splice(currentIndex, 1);
     }
 
-    setChecked(newChecked);
-  };
-
-  const numberOfChecked = (items) => intersection(checked, items).length;
-
-  const handleToggleAll = (items) => () => {
-    if (numberOfChecked(items) === items.length) {
-      setChecked(not(checked, items));
-    } else {
-      setChecked(union(checked, items));
-    }
+    setStudentChecked(newChecked);
   };
 
   const handleCheckedRight = () => {
-    setRight(right.concat(leftChecked));
-    setLeft(not(left, leftChecked));
-    setChecked(not(checked, leftChecked));
+    setRightStudnets(rightStudnets.concat(studentsleftChecked));
+    setLeftStudnets(not(leftStudents, studentsleftChecked));
+    setStudentChecked(not(studentchecked, studentsleftChecked));
   };
 
   const handleCheckedLeft = () => {
-    setLeft(left.concat(rightChecked));
-    setRight(not(right, rightChecked));
-    setChecked(not(checked, rightChecked));
+    setLeftStudnets(leftStudents.concat(studentsrightChecked));
+    setRightStudnets(not(rightStudnets, studentsrightChecked));
+    setStudentChecked(not(studentchecked, studentsrightChecked));
   };
 
-  const customList = (title, items) => (
-    <Card>
-      <CardHeader
-        className={classes.cardHeader}
-        avatar={
-          <Checkbox
-            onClick={handleToggleAll(items)}
-            checked={numberOfChecked(items) === items.length && items.length !== 0}
-            indeterminate={numberOfChecked(items) !== items.length && numberOfChecked(items) !== 0}
-            disabled={items.length === 0}
-            inputProps={{ 'aria-label': 'all items selected' }}
-          />
-        }
-        title={title}
-        subheader={`${numberOfChecked(items)}/${items.length} selected`}
-      />
-      <Divider />
-      <List className={classes.list} dense component="div" role="list">
-        {items.map((value) => {
-          const labelId = `transfer-list-all-item-${value}-label`;
+  const customList = (items) => (
+    <Paper style={{ whiteSpace: 'nowrap' }}>
+      <List dense component="div" role="list" className={classes.list}>
+        <ListItem role="listitem" button>
+          <ListItemIcon>
+            <Checkbox
+              disabled={true}
+            />
+          </ListItemIcon>
+          <ListItemText primary={'First Name'} style={{ width: '50%', textAlign: 'left' }} />
+          <ListItemText primary={'Last Name'} style={{ width: '50%', textAlign: 'left' }} />
+        </ListItem>
+        {items.map((value, index) => {
+          const labelId = `transfer-list-item-${value.id}-label`;
           return (
-            <ListItem key={value} role="listitem" button onClick={handleToggle(value)}>
-              <ListItemIcon>
+            <ListItem key={index} role="listitem" button onClick={handleToggle(value)}>
+              <ListItemIcon key={index + 1}>
                 <Checkbox
-                  checked={checked.indexOf(value) !== -1}
+                  key={index + 2}
+                  checked={studentchecked.indexOf(value) !== -1}
                   tabIndex={-1}
                   disableRipple
                   inputProps={{ 'aria-labelledby': labelId }}
                 />
               </ListItemIcon>
-              <ListItemText id={labelId} primary={`List item ${value + 1}`} />
+              <ListItemText id={labelId} primary={value.firstName} key={index + 3} />
+              <ListItemText id={labelId} primary={value.lastName} key={index + 4} />
             </ListItem>
           );
         })}
         <ListItem />
       </List>
-    </Card>
+    </Paper>
   );
 
   // transfer list for end
-
   return (
     <Formik
       initialValues={{
         name: textbook.name || '',
-        stock: textbook.stock || ''
+        stock: textbook.stock || '',
+        status: textbook.status || '',
+        nearMid: textbook.nearMid || '',
+        nearEnd: textbook.nearEnd || '',
+        midPoint: textbook.midPoint || '',
       }}
       onSubmit={
         async (values, { setErrors }) => {
+          let senddata = {
+            values: values,
+            students: rightStudnets,
+            oldstudents: oldstudents,
+            id: textbookid
+          };
+          console.log(senddata)
 
+          const url = `api/textbooks/${(update) ? 'update' : 'create'}`
+          const method = (update) ? 'put' : 'post';
+          httpClient[method](url, senddata)
+            .then(json => {
+              if (json.success && isMountedRef.current) {
+                setOldStudnets(rightStudnets)
+                enqueueSnackbar(
+                  formatMessage(intl[(update) ? 'Updated successfully' : 'Added successfully']),
+                  { variant: 'success' }
+                )
+              }
+              else
+                enqueueSnackbar(
+                  formatMessage('FAILD'),
+                  { variant: 'error' }
+                )
+            })
+            .catch((error) => {
+              console.log(error);
+            });
         }
       }
     >
@@ -233,43 +308,46 @@ const TextbookAddEditForm = ({ textbook, update, intl }) => {
                         <div style={{ marginRight: 15 }}>Exam reminders:</div>
                         <div className={classes.boldletter}>Progress test from unit:</div>
                         <CssTextField
-                          required
-                          name="from_unit"
+                          name="nearMid"
                           className={classes.inputStyle}
                           style={{ width: 70 }}
+                          value={values.nearMid}
+                          onChange={handleChange}
                         />
                         <div className={classes.boldletter}>To:</div>
                         <CssTextField
-                          required
-                          name="to_unit"
+                          name="nearEnd"
                           className={classes.inputStyle}
                           style={{ width: 70 }}
+                          value={values.nearEnd}
+                          onChange={handleChange}
                         />
                         <div className={classes.boldletter}>Final exam from unit:</div>
                         <CssTextField
-                          required
-                          name="unit"
+                          name="midPoint"
                           className={classes.inputStyle}
                           style={{ width: 70 }}
+                          value={values.midPoint}
+                          onChange={handleChange}
                         />
                       </div>
 
                       <div className={classes.row_Div}>
                         <div className={classes.boldletter}>Name:</div>
                         <CssTextField
-                          required
                           name="name"
                           className={classes.inputStyle}
                           style={{ width: 300 }}
+                          onChange={handleChange}
                           value={values.name}
                         />
                         <div className={classes.boldletter}>Stock:</div>
                         <CssTextField
-                          required
                           name="stock"
                           className={classes.inputStyle}
                           style={{ width: 70 }}
                           value={values.stock}
+                          onChange={handleChange}
                         />
                       </div>
                       <div className={classes.row_Div}>
@@ -279,9 +357,10 @@ const TextbookAddEditForm = ({ textbook, update, intl }) => {
                       <div className={classes.row_Div}>
                         <div className={classes.boldletter}>Search:</div>
                         <CssTextField
-                          required
                           name="search"
                           className={classes.inputStyle}
+                          value={searchVal.name}
+                          onChange={(e) => handleChangeSearchVal('name', e)}
                         />
                         <FormControlLabel
                           control={
@@ -289,6 +368,8 @@ const TextbookAddEditForm = ({ textbook, update, intl }) => {
                               name="only_active"
                               color="primary"
                               style={{ marginLeft: 10 }}
+                              checked={searchVal.active}
+                              onChange={(event, value) => { handleChangeSearchVal('active', value) }}
                             />
                           }
                           label="Only active"
@@ -297,7 +378,7 @@ const TextbookAddEditForm = ({ textbook, update, intl }) => {
                     </Grid>
                     <Grid container alignItems="center" className={classes.transfer_root}>
                       <Grid item md={5} xs={12}>
-                        {customList('Choices', left)}
+                        {customList(leftStudents)}
                       </Grid>
                       <Grid item md={2} xs={12}>
                         <Grid container direction="column" alignItems="center">
@@ -307,7 +388,7 @@ const TextbookAddEditForm = ({ textbook, update, intl }) => {
                             variant="contained"
                             className={classes.button}
                             onClick={handleCheckedRight}
-                            disabled={leftChecked.length === 0}
+                            disabled={studentsleftChecked.length === 0}
                             aria-label="move selected right"
                           >
                             Add &gt;&gt;
@@ -317,7 +398,7 @@ const TextbookAddEditForm = ({ textbook, update, intl }) => {
                             variant="contained"
                             className={classes.button}
                             onClick={handleCheckedLeft}
-                            disabled={rightChecked.length === 0}
+                            disabled={studentsrightChecked.length === 0}
                             aria-label="move selected left"
                           >
                             Remove
@@ -325,9 +406,30 @@ const TextbookAddEditForm = ({ textbook, update, intl }) => {
                         </Grid>
                       </Grid>
                       <Grid item md={5} xs={12}>
-                        {customList('Chosen', right)}
+                        {customList(rightStudnets)}
                       </Grid>
                     </Grid>
+                    <div style={{ width: '100%', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>If  you wish to remove a student, you can do so by editing the student in question.</div>
+                      <div style={{ display: 'flex' }}>
+                        <Button
+                          color="secondary"
+                          variant="contained"
+                          onClick={() => history.goBack()}
+                          style={{ margin: 5 }}
+                        >
+                          Cancel
+                          </Button>
+                        <Button
+                          color="secondary"
+                          variant="contained"
+                          style={{ margin: 5 }}
+                          type="submit"
+                        >
+                          Save
+                      </Button>
+                      </div>
+                    </div>
                   </Grid>
                   <Grid item xs={12} sm={3}></Grid>
                 </Grid>
@@ -342,12 +444,14 @@ const TextbookAddEditForm = ({ textbook, update, intl }) => {
 
 TextbookAddEditForm.propTypes = {
   update: PropTypes.bool,
-  textbook: PropTypes.object,
+  textbook: PropTypes.object.isRequired,
+  students: PropTypes.array.isRequired,
   className: PropTypes.string,
 };
 
 TextbookAddEditForm.defaultProps = {
   textbook: {},
+  students: []
 }
 
 const mapStateToProps = (store) => ({

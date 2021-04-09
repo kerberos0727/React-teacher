@@ -316,3 +316,33 @@ export const getAllStorageUsers = () => {
     }
 }
 // users end
+
+// rooms start
+export const setRooms = (rooms) => {
+    if (rooms) {
+        localStorage.setItem('rooms', rooms);
+    } else {
+        localStorage.removeItem('rooms');
+    }
+};
+
+export const getRooms = () => {
+    return {
+        global_rooms: window.localStorage.getItem('rooms'),
+    }
+}
+
+export const setAllRooms = (allrooms) => {
+    if (allrooms) {
+        localStorage.setItem('allrooms', allrooms);
+    } else {
+        localStorage.removeItem('allrooms');
+    }
+};
+
+export const getAllRooms = () => {
+    return {
+        global_allrooms: window.localStorage.getItem('allrooms'),
+    }
+}
+// rooms end

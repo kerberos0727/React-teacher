@@ -75,11 +75,13 @@ const useStyles = makeStyles((theme) => ({
 const Results = ({
   intl,
   textbooks,
+  totalcount,
   className,
-  deletetextbook,
-  deletetextbooks,
+  deleteTextbook,
+  deleteTextbooks,
+  handleGetData,
+  handleSearchData
 }) => {
-  const theme = useTheme();
   const classes = useStyles();
   const [filters] = useState({});
   const [page, setPage] = useState(0);
@@ -88,16 +90,22 @@ const Results = ({
   const { enqueueSnackbar } = useSnackbar();
   const [selectedTextbooks, setSelectedTextbooks] = useState([]);
   const [sort, setSort] = useState(sortOptionsDefault[2].value);
+  const [searchVals, setSearchvals] = React.useState({
+    name: '',
+  });
 
-  const handleQueryChange = (event) => {
-    event.persist();
-    setQuery(event.target.value);
+  const handleSearchChange = (event) => {
+    let newdata = { ...searchVals }
+    newdata.name = event.target.value;
+    setSearchvals(newdata)
   };
 
-  const handleSortChange = (event) => {
-    event.persist();
-    setSort(event.target.value);
-  };
+  useEffect(() => {
+    let data = { searchVals: searchVals, pagenum: 0, limitnum: 10 }
+    if (searchVals.name === '')
+      handleGetData(0, 10)
+    handleSearchData(data);
+  }, [searchVals])
 
   const handleSelectAllTextbooks = (event) => {
     setSelectedTextbooks(event.target.checked
@@ -115,15 +123,24 @@ const Results = ({
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
+    let data = { searchVals: searchVals, pagenum: parseInt(newPage + '0'), limitnum: limit }
+    if (searchVals.name !== '')
+      handleSearchData(data);
+    else
+      handleGetData(parseInt(newPage + '0'), limit);
   };
 
   const handleLimitChange = (event) => {
     setLimit(parseInt(event.target.value));
+    let data = { searchVals: searchVals, pagenum: page, imitnum: event.target.value }
+    if (searchVals.name !== '')
+      handleSearchData(data);
+    else
+      handleGetData(page, event.target.value);
   };
 
   const filteredTextbooks = applyFilters(textbooks, query, filters);
   const sortedTextbooks = applySort(filteredTextbooks, sort);
-  const paginatedTextbooks = applyPagination(sortedTextbooks, page, limit);
   const enableBulkOperations = selectedTextbooks.length > 0;
   const selectedSomeTextbooks = selectedTextbooks.length > 0 && selectedTextbooks.length < textbooks.length;
   const selectedAllTextbooks = selectedTextbooks.length === textbooks.length;
@@ -145,9 +162,9 @@ const Results = ({
               </InputAdornment>
             )
           }}
-          value={query}
+          value={searchVals.name}
           variant="outlined"
-          onChange={handleQueryChange}
+          onChange={handleSearchChange}
           placeholder={formatMessage(intl.search)}
         />
         <Box flexGrow={1} />
@@ -163,13 +180,13 @@ const Results = ({
             <Button
               variant="outlined"
               className={classes.bulkAction}
-            // onClick={() => handleDeleteAllSelected(
-            //   selectedTextbooks,
-            //   deleteTextbooks,
-            //   setSelectedTextbooks,
-            //   enqueueSnackbar,
-            //   { ...intl, formatMessage }
-            // )}
+              onClick={() => handleDeleteAllSelected(
+                selectedTextbooks,
+                deleteTextbooks,
+                setSelectedTextbooks,
+                enqueueSnackbar,
+                { ...intl, formatMessage }
+              )}
             >
               {formatMessage(intl.deleteAll)}
             </Button>
@@ -208,7 +225,7 @@ const Results = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginatedTextbooks.map((n, index) => {
+              {textbooks.map((n, index) => {
                 const isTextbookselected = selectedTextbooks.includes(n.id);
 
                 return (
@@ -230,7 +247,7 @@ const Results = ({
                     </TableCell>
 
                     <TableCell align="center">
-                      {n.given}
+                      {n.totalGiven}
                     </TableCell>
 
                     <TableCell align="center">
@@ -257,12 +274,12 @@ const Results = ({
                         </SvgIcon>
                       </IconButton>
                       <IconButton
-                        // onClick={() => handleDelete(
-                        //   n.id,
-                        //   deleteTextbook,
-                        //   enqueueSnackbar,
-                        //   { ...intl, formatMessage }
-                        // )}
+                        onClick={() => handleDelete(
+                          n.id,
+                          deleteTextbook,
+                          enqueueSnackbar,
+                          { ...intl, formatMessage }
+                        )}
                         title="Delete"
                       >
                         <SvgIcon fontSize="small">
@@ -279,7 +296,7 @@ const Results = ({
       </PerfectScrollbar>
       <TablePagination
         component="div"
-        count={filteredTextbooks.length}
+        count={totalcount}
         onChangePage={handlePageChange}
         onChangeRowsPerPage={handleLimitChange}
         page={page}
@@ -292,11 +309,13 @@ const Results = ({
 
 Results.propTypes = {
   className: PropTypes.string,
-  textbooks: PropTypes.array.isRequired
+  textbooks: PropTypes.array.isRequired,
+  totalcount: PropTypes.number.isRequired
 };
 
 Results.defaultProps = {
-  textbooks: []
+  textbooks: [],
+  totalcount: 0
 };
 
 const mapStateToProps = (store) => ({

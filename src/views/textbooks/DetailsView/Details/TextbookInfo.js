@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
 import {
@@ -20,6 +20,8 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import httpClient from 'src/utils/httpClient';
+import useIsMountedRef from 'src/hooks/useIsMountedRef';
 
 /* connectIntl */
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
@@ -63,6 +65,10 @@ const CssTextField = withStyles({
 
 const useStyles = makeStyles((theme) => ({
   root: {},
+  search_form: {
+    width: 250,
+    "@media (max-width: 390px)": { width: '100%' },
+  },
   boldletter: {
     fontWeight: 'bold',
     marginRight: 10
@@ -117,25 +123,69 @@ function createData1(name, n) {
   return { name, n };
 }
 
-const rows = [
-  createData('Adrian', 'Langoria Salvador', '', '1', ''),
-  createData('Adrian', 'Langoria Salvador', '', '1', ''),
-  createData('Adrian', 'Langoria Salvador', '', '1', ''),
-  createData('Adrian', 'Langoria Salvador', '', '1', ''),
-  createData('Adrian', 'Langoria Salvador', '', '1', ''),
-  createData('Adrian', 'Langoria Salvador', '', '1', ''),
-];
-
-const teacher_rows = [
-  createData1('Gareth', '1'),
-  createData1('Gareth', '1'),
-  createData1('Gareth', '1'),
-  createData1('Gareth', '1'),
-  createData1('Gareth', '1'),
-];
-
-const TextbookInfo = ({ textbook, intl }) => {
+const TextbookInfo = ({ textbook, teachers, students, intl }) => {
   const classes = useStyles();
+  const [searchVals, setSearchVals] = React.useState({
+    teachers_name: '',
+    teachers_status: false,
+    students_name: '',
+    students_status: false,
+  });
+
+  const [state_students, setStudents] = React.useState([])
+  const [state_teachers, setTeachers] = React.useState([])
+  const isMountedRef = useIsMountedRef();
+
+  useEffect(() => {
+    setStudents(students);
+    setTeachers(teachers);
+  }, [students, teachers])
+
+  const handleChangeActivestatus = (name, value) => {
+    let newdata = { ...searchVals }
+    switch (name) {
+      case 'teachers_status':
+        newdata.teachers_status = value;
+        handlefilterActive("teachers", newdata);
+        break;
+      case 'teachers_name':
+        newdata.teachers_name = value.target.value;
+        handlefilterActive("teachers", newdata);
+        break;
+      case 'students_status':
+        newdata.students_status = value;
+        handlefilterActive("students", newdata);
+        break;
+      case 'students_name':
+        newdata.students_name = value.target.value;
+        handlefilterActive("students", newdata);
+        break;
+    }
+    console.log(newdata)
+    setSearchVals(newdata)
+  }
+
+  const handlefilterActive = (flag, newdata) => {
+    let data = { id: textbook.id, newdata: newdata };
+    let url;
+    if (flag === "teachers")
+      url = `api/textbooks/teachers`
+    if (flag === "students")
+      url = `api/textbooks/students`
+    const method = 'post';
+    httpClient[method](url, data)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          if (flag === "teachers")
+            setTeachers(json.teachers);
+          if (flag === "students")
+            setStudents(json.students);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
 
   return (
     <Card className={clsx(classes.root)} >
@@ -157,16 +207,16 @@ const TextbookInfo = ({ textbook, intl }) => {
             </div>
           </div>
         </Grid>
-        <Grid item xs={12} style={{ padding: 15 }}>
+        <Grid item xs={12} style={{ padding: 15, height: 600 }}>
           <div className={classes.row_Div} style={{ flexWrap: 'wrap' }}>
             <div className={classes.row_Div} style={{ marginRight: 20 }}>
               <div className={classes.boldletter}>Students:</div>
               <CssTextField
                 id="stuendt_search"
-                style={{ width: 250 }}
+                className={classes.search_form}
                 variant="outlined"
-              // value={values.maxHours}
-              // onChange={handleChange}
+                onChange={(e) => { handleChangeActivestatus("students_name", e) }}
+                checked={searchVals.students_name}
               />
             </div>
             <FormControlLabel
@@ -175,16 +225,18 @@ const TextbookInfo = ({ textbook, intl }) => {
                   name="only_active"
                   color="primary"
                   style={{ marginLeft: 10 }}
+                  onChange={() => { handleChangeActivestatus("students_status", !searchVals.students_status) }}
+                  checked={searchVals.students_status}
                 />
               }
               label="Only active"
             />
-            <div className={classes.row_Div} style={{ marginRight: 20 }}>
+            <div className={classes.row_Div} style={{ marginRight: 20, marginBottom: 0 }}>
               <div className={classes.boldletter}>Total:</div>
-              <div>27</div>
+              <div>{state_students.length}</div>
             </div>
           </div>
-          <TableContainer component={Paper}>
+          <TableContainer component={Paper} style={{ height: '100%' }}>
             <Table aria-label="customized table">
               <TableHead>
                 <TableRow>
@@ -196,12 +248,12 @@ const TextbookInfo = ({ textbook, intl }) => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.map((row, index) => (
+                {state_students.map((row, index) => (
                   <StyledTableRow key={index}>
-                    <StyledTableCell>{row.first_name}</StyledTableCell>
-                    <StyledTableCell>{row.last_name}</StyledTableCell>
+                    <StyledTableCell>{row.firstName}</StyledTableCell>
+                    <StyledTableCell>{row.lastName}</StyledTableCell>
                     <StyledTableCell>{row.pack}</StyledTableCell>
-                    <StyledTableCell>{row.n}</StyledTableCell>
+                    <StyledTableCell>{row.amount}</StyledTableCell>
                     <StyledTableCell>{row.mark}</StyledTableCell>
                   </StyledTableRow>
                 ))}
@@ -210,16 +262,16 @@ const TextbookInfo = ({ textbook, intl }) => {
           </TableContainer>
         </Grid>
 
-        <Grid item xs={12} style={{ padding: 15 }}>
+        <Grid item xs={12} style={{ padding: 15, height: 600, marginTop: 100 }}>
           <div className={classes.row_Div} style={{ flexWrap: 'wrap' }}>
             <div className={classes.row_Div} style={{ marginRight: 20 }}>
               <div className={classes.boldletter}>Teachers:</div>
               <CssTextField
                 id="teacher_search"
-                style={{ width: 250 }}
+                className={classes.search_form}
                 variant="outlined"
-              // value={values.maxHours}
-              // onChange={handleChange}
+                onChange={(e) => { handleChangeActivestatus("teachers_name", e) }}
+                checked={searchVals.teachers_name}
               />
             </div>
             <FormControlLabel
@@ -228,16 +280,18 @@ const TextbookInfo = ({ textbook, intl }) => {
                   name="only_active"
                   color="primary"
                   style={{ marginLeft: 10 }}
+                  onChange={() => { handleChangeActivestatus("teachers_status", !searchVals.teachers_status) }}
+                  checked={searchVals.teachers_status}
                 />
               }
               label="Only active"
             />
-            <div className={classes.row_Div} style={{ marginRight: 20 }}>
+            <div className={classes.row_Div} style={{ marginRight: 20, marginBottom: 0 }}>
               <div className={classes.boldletter}>Total:</div>
-              <div>3</div>
+              <div>{state_teachers.length}</div>
             </div>
           </div>
-          <TableContainer component={Paper}>
+          <TableContainer component={Paper} style={{ height: '100%' }}>
             <Table aria-label="customized table">
               <TableHead>
                 <TableRow>
@@ -246,10 +300,10 @@ const TextbookInfo = ({ textbook, intl }) => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {teacher_rows.map((row, index) => (
+                {state_teachers.map((row, index) => (
                   <StyledTableRow key={index}>
                     <StyledTableCell>{row.name}</StyledTableCell>
-                    <StyledTableCell>{row.n}</StyledTableCell>
+                    <StyledTableCell>{row.amount}</StyledTableCell>
                   </StyledTableRow>
                 ))}
               </TableBody>
@@ -263,7 +317,9 @@ const TextbookInfo = ({ textbook, intl }) => {
 
 TextbookInfo.propTypes = {
   className: PropTypes.string,
-  textbook: PropTypes.object.isRequired
+  textbook: PropTypes.object.isRequired,
+  teachers: PropTypes.array.isRequired,
+  students: PropTypes.array.isRequired
 };
 
 const mapStateToProps = (store) => ({

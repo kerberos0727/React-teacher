@@ -14,12 +14,7 @@ import { useParams } from 'react-router-dom';
 import { Edit as EditIcon } from 'react-feather';
 import Header from 'src/components/HeaderBreadcrumbs';
 import useIsMountedRef from 'src/hooks/useIsMountedRef';
-
-/* utils */
 import httpClient from 'src/utils/httpClient';
-import axios from 'src/utils/axios';
-
-/* connectIntl */
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
 
 const useStyles = makeStyles((theme) => ({
@@ -35,23 +30,27 @@ const TextbookDetailView = ({ intl }) => {
 	const params = useParams();
 	const classes = useStyles();
 	const isMountedRef = useIsMountedRef();
-	const [textbook, setTextbook] = useState(null);
+	const [textbook, setTextbook] = useState({});
+	const [students, setStudents] = useState([]);
+	const [teachers, setTeachers] = useState([]);
 
-	const getTextbook = useCallback(async () => {
-		try {
-			const response = await axios.get(`api/textbook/1`);
-			if (isMountedRef.current) {
-				setTextbook(response.data.textbook);
-				console.log(response.data.textbook)
-			}
-		} catch (err) {
-			console.log(err)
-		}
+	const getPerTextbookinfos = useCallback(async () => {
+		httpClient.get(`api/textbooks/perInfo/${params.textbookId}`)
+			.then(json => {
+				if (json.success && isMountedRef.current) {
+					setTextbook(json.textbook[0]);
+					setStudents(json.students);
+					setTeachers(json.teachers);
+				}
+			})
+			.catch((error) => {
+				console.log(error);
+			});
 	}, [isMountedRef]);
 
 	useEffect(() => {
-		getTextbook();
-	}, [getTextbook]);
+		getPerTextbookinfos();
+	}, [getPerTextbookinfos]);
 
 	if (!textbook) {
 		return null;
@@ -73,7 +72,11 @@ const TextbookDetailView = ({ intl }) => {
 					}}
 				/>
 				<Box mt={3}>
-					<Details textbook={textbook} />
+					<Details
+						textbook={textbook}
+						teachers={teachers}
+						students={students}
+					/>
 				</Box>
 			</Container>
 		</Page>

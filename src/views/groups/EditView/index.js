@@ -35,17 +35,32 @@ const GroupEditView = ({ match, intl }) => {
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
   const [group, setGroup] = useState(null);
+  const [students, setStudents] = useState([]);
 
   const getGroup = useCallback(async () => {
-    try {
-      const response = await axios.get(`api/group/1`);
-      if (isMountedRef.current) {
-        setGroup(response.data.group);
-        console.log(response.data.group)
-      }
-    } catch (err) {
-      console.log(err)
-    }
+    httpClient.get(`api/group/${params.groupId}`)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          setGroup(json.group[0]);
+          getStudents();
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, [isMountedRef, params.groupId]);
+
+  const getStudents = useCallback(async () => {
+    httpClient.get(`api/pergroupsstudents/${params.groupId}`)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          setStudents(json.students);
+          console.log('json.lesson[0]--->', json.students);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }, [isMountedRef, params.groupId]);
 
   useEffect(() => {
@@ -66,7 +81,11 @@ const GroupEditView = ({ match, intl }) => {
       </Container>
       <Box mt={3}>
         <Container maxWidth={false}>
-          <GroupEditForm update group={group} />
+          <GroupEditForm
+            update
+            group={group}
+            students={students}
+          />
         </Container>
       </Box>
     </Page>

@@ -19,3 +19,5 @@ global.Alltopics = [];
 global.students = [];
 global.Allstudents = [];
 global.Allusers = [];
+global.rooms = [];
+global.Allrooms = [];

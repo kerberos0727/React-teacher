@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
@@ -35,6 +35,8 @@ import {
   applyFilters,
   applyPagination,
   sortOptionsDefault,
+  handleDelete,
+  handleDeleteAllSelected,
 } from 'src/utils/defaultTableSettings';
 
 /* connectIntl */
@@ -71,9 +73,12 @@ const useStyles = makeStyles((theme) => ({
 const Results = ({
   intl,
   groups,
+  totalcount,
   className,
   deleteGroup,
   deleteGroups,
+  handleGetData,
+  handleSearchData
 }) => {
   const classes = useStyles();
   const [filters] = useState({});
@@ -83,16 +88,51 @@ const Results = ({
   const { enqueueSnackbar } = useSnackbar();
   const [selectedGroups, setSelectedGroups] = useState([]);
   const [sort, setSort] = useState(sortOptionsDefault[2].value);
+  const [searchVals, setSearchvals] = React.useState({
+    name: '',
+    groups: true,
+    private: false,
+    hour: false,
+    day: false,
+    friday: false,
+    saturday: false,
+  });
 
-  const handleQueryChange = (event) => {
-    event.persist();
-    setQuery(event.target.value);
+  const handleChangeSearchvals = (name, value) => {
+    let newdata = { ...searchVals }
+    switch (name) {
+      case 'name':
+        newdata.name = value.target.value;
+        break;
+      case 'groups':
+        newdata.groups = value;
+        break;
+      case 'private':
+        newdata.private = value;
+        break;
+      case 'hour':
+        newdata.hour = value;
+        break;
+      case 'day':
+        newdata.day = value;
+        break;
+      case 'friday':
+        newdata.friday = value;
+        break;
+      case 'saturday':
+        newdata.saturday = value;
+        break;
+    }
+    setSearchvals(newdata)
   };
 
-  const handleSortChange = (event) => {
-    event.persist();
-    setSort(event.target.value);
-  };
+  useEffect(() => {
+    let data = { searchVals: searchVals, pagenum: 0, limitnum: 10 }
+    if (searchVals.name === '' && searchVals.groups === false && searchVals.private === false && searchVals.hour === false && searchVals.day === false && searchVals.friday === false && searchVals.saturday === false) {
+      handleGetData(0, 10)
+    }
+    handleSearchData(data);
+  }, [searchVals])
 
   const handleSelectAllGroups = (event) => {
     setSelectedGroups(event.target.checked
@@ -110,15 +150,24 @@ const Results = ({
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
+    let data = { searchVals: searchVals, pagenum: parseInt(newPage + '0'), limitnum: limit }
+    if (searchVals.name !== '' || searchVals.groups !== false || searchVals.private !== false || searchVals.hour !== false || searchVals.day !== false || searchVals.friday !== false || searchVals.saturday !== false)
+      handleSearchData(data)
+    else
+      handleGetData(parseInt(newPage + '0'), limit);
   };
 
   const handleLimitChange = (event) => {
     setLimit(parseInt(event.target.value));
+    let data = { searchVals: searchVals, pagenum: page, imitnum: event.target.value }
+    if (searchVals.name !== '' || searchVals.groups !== false || searchVals.private !== false || searchVals.hour !== false || searchVals.day !== false || searchVals.friday !== false || searchVals.saturday !== false)
+      handleSearchData(data)
+    else
+      handleGetData(page, event.target.value);
   };
 
   const filteredGroups = applyFilters(groups, query, filters);
   const sortedGroups = applySort(filteredGroups, sort);
-  const paginatedGroups = applyPagination(sortedGroups, page, limit);
   const enableBulkOperations = selectedGroups.length > 0;
   const selectedSomeGroups = selectedGroups.length > 0 && selectedGroups.length < groups.length;
   const selectedAllGroups = selectedGroups.length === groups.length;
@@ -140,9 +189,9 @@ const Results = ({
               </InputAdornment>
             )
           }}
-          value={query}
           variant="outlined"
-          onChange={handleQueryChange}
+          value={searchVals.name}
+          onChange={(e) => handleChangeSearchvals('name', e)}
           placeholder={formatMessage(intl.search)}
         />
         <Grid container >
@@ -152,6 +201,8 @@ const Results = ({
                 <Checkbox
                   name="show_groups"
                   color="primary"
+                  onChange={() => { handleChangeSearchvals("groups", !searchVals.groups) }}
+                  checked={searchVals.groups}
                 />
               }
               label="Show Groups"
@@ -159,8 +210,10 @@ const Results = ({
             <FormControlLabel
               control={
                 <Checkbox
-                  name="show_primary"
+                  name="show_private"
                   color="primary"
+                  onChange={() => { handleChangeSearchvals("private", !searchVals.private) }}
+                  checked={searchVals.private}
                 />
               }
               label="Show Private"
@@ -170,6 +223,8 @@ const Results = ({
                 <Checkbox
                   name="hour"
                   color="primary"
+                  onChange={() => { handleChangeSearchvals("hour", !searchVals.hour) }}
+                  checked={searchVals.hour}
                 />
               }
               label="1 hour"
@@ -179,6 +234,8 @@ const Results = ({
                 <Checkbox
                   name="days"
                   color="primary"
+                  onChange={() => { handleChangeSearchvals("day", !searchVals.day) }}
+                  checked={searchVals.day}
                 />
               }
               label="2 days"
@@ -188,6 +245,8 @@ const Results = ({
                 <Checkbox
                   name="fri"
                   color="primary"
+                  onChange={() => { handleChangeSearchvals("friday", !searchVals.friday) }}
+                  checked={searchVals.friday}
                 />
               }
               label="Fri"
@@ -197,6 +256,8 @@ const Results = ({
                 <Checkbox
                   name="sat"
                   color="primary"
+                  onChange={() => { handleChangeSearchvals("saturday", !searchVals.saturday) }}
+                  checked={searchVals.saturday}
                 />
               }
               label="Sat"
@@ -216,13 +277,13 @@ const Results = ({
             <Button
               variant="outlined"
               className={classes.bulkAction}
-            // onClick={() => handleDeleteAllSelected(
-            //   selectedGroups,
-            //   deleteGroups,
-            //   setSelectedGroups,
-            //   enqueueSnackbar,
-            //   { ...intl, formatMessage }
-            // )}
+              onClick={() => handleDeleteAllSelected(
+                selectedGroups,
+                deleteGroups,
+                setSelectedGroups,
+                enqueueSnackbar,
+                { ...intl, formatMessage }
+              )}
             >
               {formatMessage(intl.deleteAll)}
             </Button>
@@ -273,7 +334,7 @@ const Results = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginatedGroups.map((n, index) => {
+              {groups.map((n, index) => {
                 const isGroupselected = selectedGroups.includes(n.id);
 
                 return (
@@ -295,7 +356,7 @@ const Results = ({
                     </TableCell>
 
                     <TableCell align="center">
-                      {n.group}
+                      {n.name}
                     </TableCell>
 
                     <TableCell align="center">
@@ -334,12 +395,12 @@ const Results = ({
                         </SvgIcon>
                       </IconButton>
                       <IconButton
-                        // onClick={() => handleDelete(
-                        //   n.id,
-                        //   deleteGroup,
-                        //   enqueueSnackbar,
-                        //   { ...intl, formatMessage }
-                        // )}
+                        onClick={() => handleDelete(
+                          n.id,
+                          deleteGroup,
+                          enqueueSnackbar,
+                          { ...intl, formatMessage }
+                        )}
                         title="Delete"
                       >
                         <SvgIcon fontSize="small">
@@ -356,7 +417,7 @@ const Results = ({
       </PerfectScrollbar>
       <TablePagination
         component="div"
-        count={filteredGroups.length}
+        count={totalcount}
         onChangePage={handlePageChange}
         onChangeRowsPerPage={handleLimitChange}
         page={page}
@@ -369,11 +430,13 @@ const Results = ({
 
 Results.propTypes = {
   className: PropTypes.string,
-  groups: PropTypes.array.isRequired
+  groups: PropTypes.array.isRequired,
+  totalcount: PropTypes.number
 };
 
 Results.defaultProps = {
-  groups: []
+  groups: [],
+  totalcount: 0,
 };
 
 const mapStateToProps = (store) => ({

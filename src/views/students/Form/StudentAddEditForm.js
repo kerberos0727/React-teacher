@@ -545,6 +545,7 @@ const StudentAddEditForm = ({ student, update, intl }) => {
       .then(json => {
         if (json.success && isMountedRef.current) {
           setTextbookRight(json.textbook);
+          setOldTextbookRight(json.textbook);
         }
       })
       .catch((error) => {
@@ -591,9 +592,6 @@ const StudentAddEditForm = ({ student, update, intl }) => {
     handlegetWeekStatus(student.daysOfWeek)
     getGroupsstudentids();
     getTextbookinfo();
-    console.log('student-->', student)
-    console.log('student-->', selectedGroups)
-    console.log('student-->', textbookright)
   }, [getAllinfos]);
 
   const handlegetAddress = (address) => {
@@ -734,7 +732,7 @@ const StudentAddEditForm = ({ student, update, intl }) => {
           let userId = window.localStorage.getItem('userid');
           let daysofweekNum = handlegetWeekdays();
           setSelectedgroups(groupright)
-          setOldTextbookRight(textbookright)
+          // setOldTextbookRight(textbookright)
           let lev, lang, howdid;
           httpClient.get(`api/classes/all`)
             .then(json => {
@@ -748,7 +746,7 @@ const StudentAddEditForm = ({ student, update, intl }) => {
                   .then(json => {
                     if (json.success && isMountedRef.current) {
                       setSelectedgroups(groupright)
-                      setOldTextbookRight(textbookright)
+                      // setOldTextbookRight(textbookright)
                       let data = json.languages;
                       for (let i = 0; i < data.length; i++) {
                         if (data[i].name === combovalues.language)
@@ -758,7 +756,7 @@ const StudentAddEditForm = ({ student, update, intl }) => {
                         .then(json => {
                           if (json.success && isMountedRef.current) {
                             setSelectedgroups(groupright)
-                            setOldTextbookRight(textbookright)
+                            // setOldTextbookRight(textbookright)
                             let data = json.howdidyouhears;
                             for (let i = 0; i < data.length; i++) {
                               if (data[i].name === combovalues.howdidyouhear)
@@ -1264,7 +1262,7 @@ const StudentAddEditForm = ({ student, update, intl }) => {
                         </Grid>
                       </Grid>
                     </Grid>
-{/* 
+                    {/* 
                     <Grid container alignItems="center" className={classes.transfer_root}>
                       <Grid item md={5} xs={12}>
                         <div className={classes.row_container}>

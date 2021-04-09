@@ -169,7 +169,6 @@ const Results = ({
   const { enqueueSnackbar } = useSnackbar();
   const [selectedLessons, setSelectedLessons] = useState([]);
   const [sort, setSort] = useState(sortOptionsDefault[2].value);
-  const [selectedDate, setSelectedDate] = React.useState(new Date());
   const [searchVals, setSearchvals] = React.useState({
     teacher: '',
     level: '',
@@ -274,10 +273,6 @@ const Results = ({
         break;
     }
     setSearchvals(newdata)
-  };
-
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
   };
 
   const handleSelectAllLessons = (event) => {

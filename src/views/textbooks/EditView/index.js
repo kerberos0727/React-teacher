@@ -13,10 +13,9 @@ import { useParams } from 'react-router-dom';
 import TextbookEditForm from '../Form/TextbookAddEditForm';
 import Header from 'src/components/HeaderBreadcrumbs';
 import useIsMountedRef from 'src/hooks/useIsMountedRef';
-
-/* utils */
+import Backdrop from '@material-ui/core/Backdrop';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import httpClient from 'src/utils/httpClient';
-import axios from 'src/utils/axios';
 
 /* connectIntl */
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
@@ -27,24 +26,36 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: theme.spacing(3),
     paddingBottom: theme.spacing(3),
     backgroundColor: theme.palette.background.dark,
-  }
+  },
+  backdrop: {
+    zIndex: theme.zIndex.drawer + 1,
+    color: '#fff',
+  },
 }));
 
 const TextbookEditView = ({ match, intl }) => {
   const params = useParams();
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
-  const [textbook, setTextbook] = useState(null);
+  const [textbook, setTextbook] = useState({});
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
 
   const getTextbook = useCallback(async () => {
-    try {
-      const response = await axios.get(`api/textbook/1`);
-      if (isMountedRef.current) {
-        setTextbook(response.data.textbook);
-      }
-    } catch (err) {
-      console.log(err)
-    }
+    httpClient.get(`api/textbooks/perInfo/${params.textbookId}`)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          setTextbook(json.textbook[0]);
+          setStudents(json.students);
+          console.log(json)
+          setOpen(false);
+          setLoading(true);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }, [isMountedRef, params.textbookId]);
 
   useEffect(() => {
@@ -65,7 +76,19 @@ const TextbookEditView = ({ match, intl }) => {
       </Container>
       <Box mt={3}>
         <Container maxWidth="md">
-          <TextbookEditForm update textbook={textbook} />
+          {
+            loading ?
+              <TextbookEditForm
+                update
+                textbook={textbook}
+                students={students}
+              /> :
+              <div>
+                <Backdrop className={classes.backdrop} open={open}>
+                  <CircularProgress color="inherit" />
+                </Backdrop>
+              </div>
+          }
         </Container>
       </Box>
     </Page>

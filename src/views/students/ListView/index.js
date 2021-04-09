@@ -12,7 +12,6 @@ import Results from './Results';
 import Page from 'src/components/Page';
 import Header from 'src/components/HeaderBreadcrumbs';
 import useIsMountedRef from 'src/hooks/useIsMountedRef';
-import { useSnackbar } from 'notistack';
 import "src/components/global";
 import {
   setLevels,
@@ -28,7 +27,9 @@ import {
   setLessoninfos,
   setAllLessoninfos,
   setTopics,
-  setAllTopics
+  setAllTopics,
+  setRooms,
+  setAllRooms
 } from 'src/localstorage';
 
 /* utils */
@@ -300,6 +301,26 @@ const StudentsListView = ({ intl, currentLanguage }) => {
           setAllTopics(JSON.stringify(json.topics));
           global.topics = data;
           global.Alltopics = json.topics;
+          getAllRooms();
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, [isMountedRef]);
+
+  const getAllRooms = useCallback(async () => {
+    httpClient.get(`api/room/all`)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          let data = []
+          json.rooms.map((val, index) => {
+            data.push(val.name);
+          })
+          setRooms(JSON.stringify(data));
+          setAllRooms(JSON.stringify(json.rooms));
+          global.rooms = data;
+          global.Allrooms = json.topics;
           setOpen(false);
           setLoading(true);
         }

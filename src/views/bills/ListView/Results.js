@@ -8,7 +8,6 @@ import {
   Box,
   Card,
   Table,
-  Button,
   SvgIcon,
   Checkbox,
   TableRow,
@@ -21,10 +20,8 @@ import {
   withStyles
 } from '@material-ui/core';
 import {
-  Edit as EditIcon,
   Search as SearchIcon
 } from 'react-feather';
-import { useSnackbar } from 'notistack';
 import Grid from '@material-ui/core/Grid';
 import {
   KeyboardDatePicker,
@@ -32,15 +29,6 @@ import {
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FixedTextField from '../../../components/FixedTextField'
 import 'src/components/global';
-/* utils */
-import {
-  applySort,
-  applyFilters,
-  applyPagination,
-  sortOptionsDefault,
-} from 'src/utils/defaultTableSettings';
-
-/* connectIntl */
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
 import {
   getAllStorageUsers
@@ -136,20 +124,12 @@ const Results = ({
   totalcount,
   totalPrice,
   className,
-  deleteBill,
-  deleteBills,
   handleGetData,
   handleSearchData
 }) => {
   const classes = useStyles();
-  const [filters] = useState({});
   const [page, setPage] = useState(0);
   const [limit, setLimit] = useState(10);
-  const [query, setQuery] = useState('');
-  const { enqueueSnackbar } = useSnackbar();
-  const [selectedBills, setSelectedBills] = useState([]);
-  const [sort, setSort] = useState(sortOptionsDefault[2].value);
-  const [selectedDate, setSelectedDate] = React.useState(new Date());
   const [searchVals, setSearchvals] = React.useState({
     user: '',
     startDate: '',
@@ -185,20 +165,6 @@ const Results = ({
     return typeInt;
   }
 
-  const handleSelectAllBills = (event) => {
-    setSelectedBills(event.target.checked
-      ? bills.map((n) => n.id)
-      : []);
-  };
-
-  const handleSelectOneNew = (event, newId) => {
-    if (!selectedBills.includes(newId)) {
-      setSelectedBills((prevSelected) => [...prevSelected, newId]);
-    } else {
-      setSelectedBills((prevSelected) => prevSelected.filter((id) => id !== newId));
-    }
-  };
-
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
     let data = { searchVals: searchVals, typeInt: handlegetTypeint(), pagenum: parseInt(newPage + '0'), limitnum: limit }
@@ -216,13 +182,6 @@ const Results = ({
     else
       handleGetData(page, event.target.value);
   };
-
-  const filteredBills = applyFilters(bills, query, filters);
-  const sortedBills = applySort(filteredBills, sort);
-  const paginatedBills = applyPagination(sortedBills, page, limit);
-  const enableBulkOperations = selectedBills.length > 0;
-  const selectedSomeBills = selectedBills.length > 0 && selectedBills.length < bills.length;
-  const selectedAllBills = selectedBills.length === bills.length;
 
   useEffect(() => {
     let data = { searchVals: searchVals, typeInt: handlegetTypeint(), pagenum: 0, limitnum: 10 }
@@ -315,7 +274,6 @@ const Results = ({
                   required
                   format="MM/DD/YYYY"
                   name="startDate"
-                  value={selectedDate}
                   style={{ width: '65%' }}
                   value={searchVals.startDate}
                   onChange={(date) => handleChangeSearchvals('startDate', date)}
@@ -327,7 +285,6 @@ const Results = ({
                   required
                   format="MM/DD/YYYY"
                   name="endDate"
-                  value={selectedDate}
                   style={{ width: '65%' }}
                   value={searchVals.endDate}
                   onChange={(date) => handleChangeSearchvals('endDate', date)}
@@ -398,42 +355,11 @@ const Results = ({
           </Grid>
         </Grid>
       </Box>
-      {enableBulkOperations && (
-        <div className={classes.bulkOperations}>
-          <div className={classes.bulkActions}>
-            <Checkbox
-              checked={selectedAllBills}
-              onChange={handleSelectAllBills}
-              indeterminate={selectedSomeBills}
-            />
-            <Button
-              variant="outlined"
-              className={classes.bulkAction}
-            // onClick={() => handleDeleteAllSelected(
-            //   selectedBills,
-            //   deleteBills,
-            //   setSelectedBills,
-            //   enqueueSnackbar,
-            //   { ...intl, formatMessage }
-            // )}
-            >
-              {formatMessage(intl.deleteAll)}
-            </Button>
-          </div>
-        </div>
-      )}
       <PerfectScrollbar>
         <Box minWidth={700}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell padding="checkbox">
-                  <Checkbox
-                    checked={selectedAllBills}
-                    onChange={handleSelectAllBills}
-                    indeterminate={selectedSomeBills}
-                  />
-                </TableCell>
 
                 <TableCell align="center">
                   Date
@@ -463,24 +389,15 @@ const Results = ({
             </TableHead>
             <TableBody>
               {bills.map((n) => {
-                const isBillselected = selectedBills.includes(n.id);
 
                 return (
                   <TableRow
                     hover
                     key={n.id}
-                    selected={isBillselected}
                   >
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        checked={isBillselected}
-                        onChange={(event) => handleSelectOneNew(event, n.id)}
-                        value={isBillselected}
-                      />
-                    </TableCell>
 
                     <TableCell align="center">
-                      {n.dTime}
+                      {n.dTime.substr(0, 10)} {n.dTime.substr(11, 8)}
                     </TableCell>
 
                     <TableCell align="center">

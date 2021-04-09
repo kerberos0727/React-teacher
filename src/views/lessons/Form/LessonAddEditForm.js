@@ -369,26 +369,34 @@ const LessonAddEditForm = ({ lesson, textbooks, students, topics, update, intl }
   });
 
   const [state_topics, setStateTopics] = React.useState(topics)
+  const [old_state_topics, setOldStateTopics] = React.useState(topics)
   const [state_textbooks, setStateTextbooks] = React.useState(textbooks)
+  const [old_state_textbooks, setOldStateTextbooks] = React.useState(textbooks)
 
   const [studentchecked, setStudentChecked] = React.useState([]);
   const [totalstudents, setTotalStudents] = React.useState(global.Allstudents.length !== 0 ? global.Allstudents : JSON.parse(global_allstudents));
   const [leftStudents, setLeftStudnets] = React.useState(totalstudents);
   const [selectedstudents, setSelectedStudnets] = React.useState(students);
   const [rightStudnets, setRightStudnets] = React.useState(selectedstudents);
+  const [oldrightStudnets, setOldRightStudnets] = React.useState(selectedstudents);
   const studentsleftChecked = intersection(studentchecked, leftStudents);
   const studentsrightChecked = intersection(studentchecked, rightStudnets);
 
+  useEffect(() => {
+    setSelectedStudnets(students);
+    setRightStudnets(students);
+    setOldRightStudnets(students);
+  }, [students])
+
   const handleChangeSearchVal = (name, value) => {
-    let data = { searchVal };
+    let data = { ...searchVal };
     if (name === 'name') {
-      setSearchVal({ ...searchVal, [name]: value.target.value });
       data.name = value.target.value;
     }
     else {
-      setSearchVal({ ...searchVal, [name]: value });
-      data.name = value;
+      data.active = value;
     }
+    setSearchVal(data);
     handleSearch(data);
   }
 
@@ -478,7 +486,7 @@ const LessonAddEditForm = ({ lesson, textbooks, students, topics, update, intl }
       }}
       onSubmit={
         async (values, { setErrors }) => {
-          let levelId, languageId, teacherId, lessoninfoId, groupnameId;
+          let levelId = '', languageId = '', teacherId = '', lessoninfoId = '', groupnameId = '';
           let jsonallteacher = global.Allteachers.length !== 0 ? global.Allteachers : JSON.parse(global_allteachers);
           jsonallteacher.map((val) => {
             if (val.name === combovalues.teacher)
@@ -509,8 +517,11 @@ const LessonAddEditForm = ({ lesson, textbooks, students, topics, update, intl }
           let senddata = {
             values: values,
             students: rightStudnets,
+            oldstudents: oldrightStudnets,
             topics: state_topics,
+            oldtopics: old_state_topics,
             textbooks: state_textbooks,
+            oldtextbooks: old_state_textbooks,
             id: lesson.id,
             combovalues: {
               teacherId: teacherId,
@@ -520,13 +531,15 @@ const LessonAddEditForm = ({ lesson, textbooks, students, topics, update, intl }
               groupnameId: groupnameId
             }
           };
-
-          console.log('senddata--->', senddata)
+          console.log(senddata)
           const url = `api/lessons/${(update) ? 'update' : 'create'}`
           const method = (update) ? 'put' : 'post';
           httpClient[method](url, senddata)
             .then(json => {
               if (json.success && isMountedRef.current) {
+                setOldRightStudnets(rightStudnets);
+                setOldStateTopics(state_topics);
+                setOldStateTextbooks(old_state_textbooks)
                 enqueueSnackbar(
                   formatMessage(intl[(update) ? 'Updated successfully' : 'Added successfully']),
                   { variant: 'success' }

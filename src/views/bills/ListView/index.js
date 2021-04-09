@@ -12,13 +12,9 @@ import Results from './Results';
 import Page from 'src/components/Page';
 import Header from 'src/components/HeaderBreadcrumbs';
 import useIsMountedRef from 'src/hooks/useIsMountedRef';
-import { useSnackbar } from 'notistack';
 import Backdrop from '@material-ui/core/Backdrop';
 import CircularProgress from '@material-ui/core/CircularProgress';
-/* utils */
 import httpClient from 'src/utils/httpClient';
-
-/* connectIntl */
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
 
 const useStyles = makeStyles((theme) => ({
@@ -27,37 +23,21 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: theme.spacing(3),
     paddingBottom: theme.spacing(3),
     backgroundColor: theme.palette.background.dark,
-  }
+  },
+  backdrop: {
+    zIndex: theme.zIndex.drawer + 1,
+    color: '#fff',
+  },
 }));
 
 const BillsListView = ({ intl, currentLanguage }) => {
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
   const [bills, setBills] = useState([]);
-  const { enqueueSnackbar } = useSnackbar();
   const [totalcount, setTotalcount] = useState(0);
   const [totalPrice, setTotalprice] = useState(0);
   const [loading, setLoading] = React.useState(false);
   const [open, setOpen] = React.useState(false);
-
-  const deleteBills = (selectedBills) => {
-    // let temp = [];
-    // const eliminatedList = [];
-    // bills.forEach((n) => {
-    //   if (!selectedBills.includes(n.id)) {
-    //     temp.push(n)
-    //   } else {
-    //     eliminatedList.push(deleteBill(n.id));
-    //   }
-    // })
-    // return eliminatedList;
-  }
-
-  const deleteBill = (id) => {
-    // httpClient.delete(`api/bills/${id}`);
-    // setBills((prevState) => prevState.filter((el) => el.id != id))
-    // return id;
-  }
 
   const getBills = useCallback(async () => {
     httpClient.get(`api/bills/all/${0}/${10}`)
@@ -125,8 +105,6 @@ const BillsListView = ({ intl, currentLanguage }) => {
                 bills={bills}
                 totalcount={totalcount}
                 totalPrice={totalPrice}
-                deleteBill={deleteBill}
-                deleteBills={deleteBills}
                 handleGetData={handleGetData}
                 handleSearchData={handleSearchData}
               /> :

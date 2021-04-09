@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import clsx from 'clsx';
 import {
   Card,
@@ -17,6 +17,8 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogActions from '@material-ui/core/DialogActions';
+import ReactToPrint from 'react-to-print';
+import Bill from './Bill';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -113,6 +115,7 @@ const useStyles = makeStyles((theme) => ({
 
 const BillInfo = ({ bill, billNum }) => {
   const classes = useStyles();
+  const componentRef = useRef()
   const [openZoom, setOpenzoom] = React.useState(false);
   const [opendownload, setOpendownload] = React.useState(false);
 
@@ -242,7 +245,7 @@ const BillInfo = ({ bill, billNum }) => {
     totalText = totalText.split(tmp);
     // end billNumber part
     if (printType[0] === 'A4') {
-      html += `<div className=${classes.bill_container}><div className=${classes.billLogo_container}><img src='/static/images/bill_logo.png' alt='billLogo' className=${classes.billLogo} /></div>`;
+      html += `<div className=${classes.bill_container} id='bill_container'><div className=${classes.billLogo_container}><img src='/static/images/bill_logo.png' alt='billLogo' className=${classes.billLogo} /></div>`;
       html += `<div className=${classes.bill_header_container}>`;
       for (var i = 0; i < headerTxt.length; i++)
         html += `<div className=${classes.bill_header_txt_style}>${headerTxt[i]}</div>`;
@@ -286,6 +289,10 @@ const BillInfo = ({ bill, billNum }) => {
     var FileSaver = require('file-saver');
     var file = new File([handlegetBillText(bill.billText.data)], billNum + ".xml", { type: "text/plain;charset=utf-8" });
     FileSaver.saveAs(file);
+  }
+
+  const handlePrint = () => {
+
   }
 
   return (
@@ -333,10 +340,11 @@ const BillInfo = ({ bill, billNum }) => {
       <Divider />
       <Grid container>
         <Grid item xs={12} sm={5} style={{ padding: 15 }}>
-          {/* <img src="/static/images/bill.png" alt="bill" style={{ width: '100%' }} id="img-bill" /> */}
-          {
+          {/* {
             renderHTML(handlegetBillText(bill.billText.data))
-          }
+          } */}
+          <Bill billtext_data={bill.billText.data} billNum={billNum} ref={componentRef} />
+          {/* <Bill ref={componentRef} /> */}
         </Grid>
         <Grid item xs={12} sm={7} style={{ padding: 15 }}>
           <Grid container style={{
@@ -384,13 +392,14 @@ const BillInfo = ({ bill, billNum }) => {
             >
               Zoom
             </Button>
-            <Button
-              color="secondary"
-              variant="contained"
-              style={{ width: 105 }}
-            >
-              Print
-            </Button>
+            <ReactToPrint
+              trigger={() => <Button
+                color="secondary"
+                variant="contained"
+                style={{ width: 105 }}
+              >Print</Button>}
+              content={() => componentRef.current}
+            />
             <Button
               color="secondary"
               variant="contained"
