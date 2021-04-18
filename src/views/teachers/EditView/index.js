@@ -34,24 +34,29 @@ const TeacherEditView = ({ match, intl }) => {
   const params = useParams();
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
-  const [teacher, setTeacher] = useState(null);
+  const [teacher, setTeacher] = useState([]);
+  const [books, setBooks] = useState([]);
+  const [flag, setFlag] = React.useState(false);
 
   const getTeacher = useCallback(async () => {
-    try {
-      const response = await axios.get(`api/teacher/1`);
-      if (isMountedRef.current) {
-        setTeacher(response.data.teacher);
-      }
-    } catch (err) {
-      console.log(err)
-    }
+    httpClient.get(`api/teacher/edit/${params.teacherId}`)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          setTeacher(json.datas[0]);
+          setBooks(json.books);
+          setFlag(true)
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }, [isMountedRef, params.teacherId]);
 
   useEffect(() => {
     getTeacher();
   }, [getTeacher]);
 
-  if (!teacher) {
+  if (!flag) {
     return null;
   }
 
@@ -65,7 +70,11 @@ const TeacherEditView = ({ match, intl }) => {
       </Container>
       <Box mt={3}>
         <Container maxWidth="md">
-          <TeacherEditForm update teacher={teacher} />
+          <TeacherEditForm
+            update
+            teacher={teacher}
+            books={books}
+          />
         </Container>
       </Box>
     </Page>

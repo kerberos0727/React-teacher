@@ -34,7 +34,6 @@ const LessonListView = ({ intl, currentLanguage }) => {
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
   const [lessons, setLessons] = useState([]);
-  const { enqueueSnackbar } = useSnackbar();
 
   const deleteLessons = (selectedlessons) => {
     // let temp = [];

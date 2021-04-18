@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-
+import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
+import { useSnackbar } from 'notistack';
 import { Link as RouterLink } from 'react-router-dom';
+import { useHistory } from 'react-router-dom'
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import {
   Box,
@@ -27,13 +28,14 @@ import {
 } from 'react-feather';
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
-
+import 'src/components/global';
+import 'react-calendar/dist/Calendar.css';
+import DatePicker from 'react-date-picker'
+import moment from 'moment';
 /* utils */
 import {
-  applySort,
-  applyFilters,
-  applyPagination,
-  sortOptionsDefault,
+  handleDelete,
+  handleDeleteAllSelected,
 } from 'src/utils/defaultTableSettings';
 
 /* connectIntl */
@@ -63,6 +65,9 @@ const useStyles = makeStyles((theme) => ({
     height: 42,
     width: 42,
     marginRight: theme.spacing(1)
+  },
+  calendar: {
+    "@media (max-width: 599px)": { width: '100% !important' },
   }
 }));
 
@@ -72,19 +77,48 @@ const Results = ({
   className,
   deleteTeacher,
   deleteTeachers,
+  handleSearchData,
+  totalcount
 }) => {
   const classes = useStyles();
-  const [filters] = useState({});
+  const history = useHistory();
+  const { enqueueSnackbar } = useSnackbar();
   const [page, setPage] = useState(0);
   const [limit, setLimit] = useState(10);
-  const [query, setQuery] = useState('');
   const [selectedTeachers, setSelectedTeachers] = useState([]);
-  const [sort, setSort] = useState(sortOptionsDefault[2].value);
+  const [searchVals, setSearchvals] = React.useState({
+    Date: moment(new Date()).format("YYYY-MM-DD"),
+    onlyActive: false,
+    name: ''
+  })
 
-  const handleQueryChange = (event) => {
-    event.persist();
-    setQuery(event.target.value);
+  const handleSearchChange = (name, event) => {
+    let newdata = { ...searchVals }
+    switch (name) {
+      case 'name':
+        newdata.name = event.target.value;
+        break;
+      case 'onlyActive':
+        newdata.onlyActive = event;
+        break;
+      case 'Date':
+        newdata.Date = moment(event).format("YYYY-MM-DD");
+        break;
+    }
+    console.log(newdata)
+    setSearchvals(newdata)
   };
+
+  useEffect(() => {
+    if (searchVals.name === '' && searchVals.onlyActive === false) {
+      let data = { pagenum: 0, limitnum: 10, searchVal: { Date: searchVals.Date, onlyActive: false, name: '' } };
+      handleSearchData(data)
+    }
+    else {
+      let data = { pagenum: 0, limitnum: 10, searchVal: searchVals };
+      handleSearchData(data);
+    }
+  }, [searchVals])
 
   const handleSelectAllTeachers = (event) => {
     setSelectedTeachers(event.target.checked
@@ -102,22 +136,34 @@ const Results = ({
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
+    let data = { searchVal: searchVals, pagenum: parseInt(newPage + '0'), limitnum: limit }
+    handleSearchData(data)
   };
 
   const handleLimitChange = (event) => {
     setLimit(parseInt(event.target.value));
+    let data = { searchVal: searchVals, pagenum: page, limitnum: event.target.value }
+    handleSearchData(data)
   };
 
-  const filteredTeachers = applyFilters(teachers, query, filters);
-  const sortedTeachers = applySort(filteredTeachers, sort);
-  const paginatedTeachers = applyPagination(sortedTeachers, page, limit);
   const enableBulkOperations = selectedTeachers.length > 0;
   const selectedSomeTeachers = selectedTeachers.length > 0 && selectedTeachers.length < teachers.length;
   const selectedAllTeachers = selectedTeachers.length === teachers.length;
 
+  const [value, setValue] = React.useState(new Date());
+
+  const handleChangeCalender = (date) => {
+    setValue(date);
+  }
+
+  const handleViewDetail = (id) => {
+    global.teacherSearchVal = searchVals;
+    history.push(formatMessage(intl.urlTeacherDetail, { teacherId: id }))
+  }
+
   return (
     <Card className={clsx(classes.root, className)} >
-      <Box p={2} minHeight={56} display="flex" alignItems="center" >
+      <Box p={2} minHeight={56} display="flex" flexWrap='wrap' alignItems="center" >
         <TextField
           className={classes.queryField}
           InputProps={{
@@ -132,9 +178,9 @@ const Results = ({
               </InputAdornment>
             )
           }}
-          value={query}
           variant="outlined"
-          onChange={handleQueryChange}
+          value={searchVals.name}
+          onChange={(e) => handleSearchChange('name', e)}
           placeholder={formatMessage(intl.search)}
         />
         <FormControlLabel
@@ -143,9 +189,17 @@ const Results = ({
               name="only_active"
               color="primary"
               style={{ marginLeft: 10 }}
+              onChange={() => { handleSearchChange("onlyActive", !searchVals.onlyActive) }}
+              checked={searchVals.onlyActive}
             />
           }
           label="Only active"
+        />
+        <DatePicker
+          onChange={handleChangeCalender}
+          value={value}
+          onClickDay={(value) => { handleSearchChange("Date", value) }}
+          onClickMonth={(value) => { handleSearchChange("Date", value) }}
         />
       </Box>
       {enableBulkOperations && (
@@ -159,13 +213,13 @@ const Results = ({
             <Button
               variant="outlined"
               className={classes.bulkAction}
-            // onClick={() => handleDeleteAllSelected(
-            //   selectedTeachers,
-            //   deleteTeachers,
-            //   setSelectedTeachers,
-            //   enqueueSnackbar,
-            //   { ...intl, formatMessage }
-            // )}
+              onClick={() => handleDeleteAllSelected(
+                selectedTeachers,
+                deleteTeachers,
+                setSelectedTeachers,
+                enqueueSnackbar,
+                { ...intl, formatMessage }
+              )}
             >
               {formatMessage(intl.deleteAll)}
             </Button>
@@ -199,16 +253,16 @@ const Results = ({
 
                 <TableCell align="center">
                   Active
-								</TableCell>
+                </TableCell>
 
                 <TableCell align="center">
                   Status
-								</TableCell>
+                </TableCell>
 
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginatedTeachers.map((n, index) => {
+              {teachers.map((n, index) => {
                 const isTeacherselected = selectedTeachers.includes(n.id);
 
                 return (
@@ -230,22 +284,23 @@ const Results = ({
                     </TableCell>
 
                     <TableCell align="center">
-                      {n.total}
+                      {`(${n.totalhours}+0) ${n.totalhours + 0} / ${n.expected} (${Math.floor(n.hoursleft)} left)`}
                     </TableCell>
 
                     <TableCell align="center">
-                      {n.projection}
+                      {n.totalhours + 0 + n.expected}
                     </TableCell>
 
                     <TableCell align="center">
-                      {n.active}
+                      {n.status & 1 ? "x" : ""}
                     </TableCell>
 
                     <TableCell align="center">
                       <IconButton
                         component={RouterLink}
-                        to={formatMessage(intl.urlTeacherDetail, { teacherId: n.id })}
+                        // to={formatMessage(intl.urlTeacherDetail, { teacherId: { id: n.id, searchVal: searchVals } })}
                         title="Detail"
+                        onClick={() => { handleViewDetail(n.id) }}
                       >
                         <SvgIcon fontSize="small">
                           <SearchIcon />
@@ -261,12 +316,12 @@ const Results = ({
                         </SvgIcon>
                       </IconButton>
                       <IconButton
-                        // onClick={() => handleDelete(
-                        //   n.id,
-                        //   deleteTeacher,
-                        //   enqueueSnackbar,
-                        //   { ...intl, formatMessage }
-                        // )}
+                        onClick={() => handleDelete(
+                          n.id,
+                          deleteTeacher,
+                          enqueueSnackbar,
+                          { ...intl, formatMessage }
+                        )}
                         title="Delete"
                       >
                         <SvgIcon fontSize="small">
@@ -283,7 +338,7 @@ const Results = ({
       </PerfectScrollbar>
       <TablePagination
         component="div"
-        count={filteredTeachers.length}
+        count={totalcount}
         onChangePage={handlePageChange}
         onChangeRowsPerPage={handleLimitChange}
         page={page}

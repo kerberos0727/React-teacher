@@ -14,11 +14,9 @@ import Header from 'src/components/HeaderBreadcrumbs';
 import useIsMountedRef from 'src/hooks/useIsMountedRef';
 import { useSnackbar } from 'notistack';
 import axios from 'src/utils/axios';
-
-/* utils */
+import Backdrop from '@material-ui/core/Backdrop';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import httpClient from 'src/utils/httpClient';
-
-/* connectIntl */
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
 
 const useStyles = makeStyles((theme) => ({
@@ -27,65 +25,141 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: theme.spacing(3),
     paddingBottom: theme.spacing(3),
     backgroundColor: theme.palette.background.dark,
-  }
+  },
+  backdrop: {
+    zIndex: theme.zIndex.drawer + 1,
+    color: '#fff',
+  },
 }));
 
 const ExamsListView = ({ intl, currentLanguage }) => {
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
   const [results, setResults] = useState([]);
-  const { enqueueSnackbar } = useSnackbar();
+  const [schemes, setSchemes] = useState([]);
   const [tabvalue, setTabvalue] = React.useState(0)
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = React.useState(false);
+  const [examtotalcount, setexamTotalcount] = useState(0);
+  const [schemetotalcount, setschemeTotalcount] = useState(0);
 
   const deleteItems = (selectedItems) => {
-    // let temp = [];
-    // const eliminatedList = [];
-    // results.forEach((n) => {
-    //   if (!selectedItems.includes(n.id)) {
-    //     temp.push(n)
-    //   } else {
-    //     eliminatedList.push(deleteItem(n.id));
-    //   }
-    // })
-    // return eliminatedList;
+    let temp = [];
+    const eliminatedList = [];
+    results.forEach((n) => {
+      if (!selectedItems.includes(n.id)) {
+        temp.push(n)
+      } else {
+        eliminatedList.push(deleteItem(n.id));
+      }
+    })
+    return eliminatedList;
   }
 
   const deleteItem = (id) => {
-    // httpClient.delete(`api/exams/${id}`);
-    // setResults((prevState) => prevState.filter((el) => el.id != id))
-    // return id;
+    httpClient.delete(`api/more/exams/${id}`);
+    setResults((prevState) => prevState.filter((el) => el.id != id))
+    return id;
+  }
+
+  const deleteSchemeItems = (selectedItems) => {
+    let temp = [];
+    const eliminatedList = [];
+    results.forEach((n) => {
+      if (!selectedItems.includes(n.id)) {
+        temp.push(n)
+      } else {
+        eliminatedList.push(deleteItem(n.id));
+      }
+    })
+    return eliminatedList;
+  }
+
+  const deleteSchemeItem = (id) => {
+    httpClient.delete(`api/more/exams/scheme/${id}`);
+    setSchemes((prevState) => prevState.filter((el) => el.id != id))
+    return id;
   }
 
   const getResults = useCallback(async () => {
-    try {
-      const response = await axios.get(`api/more/exams/results/all`);
-      if (isMountedRef.current) {
-        // console.log('response.data.exams_results------->', response.data.exams_results)
-        setResults(response.data.exams_results);
-        setTabvalue(0)
-      }
-    } catch (err) {
-      console.log(err)
-    }
+    let data = { pagenum: 0, limitnum: 10, searchVal: { name: '' } };
+    const url = `api/more/exams/all`
+    const method = 'post';
+    httpClient[method](url, data)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          setResults(json.results);
+          setexamTotalcount(json.total);
+          setOpen(false)
+          setLoading(true)
+          setTabvalue(0)
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }, [isMountedRef]);
 
   const getSchemes = useCallback(async () => {
-    try {
-      const response = await axios.get(`api/more/exams/schemes/all`);
-      if (isMountedRef.current) {
-        // console.log('response.data.exams_schemes------->', response.data.exams_schemes)
-        setResults(response.data.exams_schemes);
-        setTabvalue(1)
-      }
-    } catch (err) {
-      console.log(err)
-    }
+    let data = { pagenum: 0, limitnum: 10, searchVal: { name: '' } };
+    const url = `api/more/exams/scheme/all`
+    const method = 'post';
+    httpClient[method](url, data)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          setSchemes(json.results);
+          setschemeTotalcount(json.total);
+          setOpen(false)
+          setLoading(true)
+          setTabvalue(0)
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }, [isMountedRef]);
 
   useEffect(() => {
+    setOpen(!open);
     getResults();
   }, [getResults]);
 
+  const handleSearchData = (data, tabflag) => {
+    let senddata;
+    if (tabflag === 0) {
+      senddata = { pagenum: data.pagenum, limitnum: data.limitnum, searchVal: { name: data.searchVal.result_name } };
+      const url = `api/more/exams/all`
+      const method = 'post';
+      httpClient[method](url, senddata)
+        .then(json => {
+          if (json.success && isMountedRef.current) {
+            setResults(json.results);
+            setexamTotalcount(json.total);
+            setTabvalue(tabflag)
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
+    else {
+      senddata = { pagenum: data.pagenum, limitnum: data.limitnum, searchVal: { name: data.searchVal.scheme_name } };
+      const url = `api/more/exams/scheme/all`
+      const method = 'post';
+      httpClient[method](url, senddata)
+        .then(json => {
+          if (json.success && isMountedRef.current) {
+            setSchemes(json.results);
+            setschemeTotalcount(json.total);
+            setTabvalue(tabflag)
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
+
+  }
 
   return (
     <Page
@@ -97,14 +171,26 @@ const ExamsListView = ({ intl, currentLanguage }) => {
           actualPage={formatMessage(intl.exams)}
         />
         <Box mt={3}>
-          <Results
-            results={results}
-            deleteItem={deleteItem}
-            deleteItems={deleteItems}
-            getResults={getResults}
-            getSchemes={getSchemes}
-            tabvalue={tabvalue}
-          />
+          {
+            loading ?
+              <Results
+                results={results}
+                schemes={schemes}
+                deleteItem={deleteItem}
+                deleteItems={deleteItems}
+                deleteSchemeItem={deleteSchemeItem}
+                deleteSchemeItems={deleteSchemeItems}
+                examtotalcount={examtotalcount}
+                schemetotalcount={schemetotalcount}
+                tabvalue={tabvalue}
+                handleSearchData={handleSearchData}
+              /> :
+              <div>
+                <Backdrop className={classes.backdrop} open={open}>
+                  <CircularProgress color="inherit" />
+                </Backdrop>
+              </div>
+          }
         </Box>
       </Container>
     </Page>

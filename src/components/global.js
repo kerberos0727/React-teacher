@@ -21,3 +21,6 @@ global.Allstudents = [];
 global.Allusers = [];
 global.rooms = [];
 global.Allrooms = [];
+global.schemes = [];
+global.Allschemes = [];
+global.teacherSearchVal = {};

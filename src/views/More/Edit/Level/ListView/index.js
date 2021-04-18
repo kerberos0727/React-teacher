@@ -34,7 +34,6 @@ const LevelListView = ({ intl, currentLanguage }) => {
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
   const [levels, setLevels] = useState([]);
-  const { enqueueSnackbar } = useSnackbar();
 
   const deleteLevels = (selectedlevels) => {
     // let temp = [];

@@ -34,7 +34,6 @@ const ContractsListView = ({ intl, currentLanguage }) => {
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
   const [contracts, setContracts] = useState([]);
-  const { enqueueSnackbar } = useSnackbar();
 
   const deletecontracts = (selectedContracts) => {
     // let temp = [];

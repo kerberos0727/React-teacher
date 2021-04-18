@@ -31,18 +31,12 @@ import AppBar from '@material-ui/core/AppBar';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import Typography from '@material-ui/core/Typography';
-
-/* utils */
-import {
-  applySort,
-  applyFilters,
-  applyPagination,
-  sortOptionsDefault,
-} from 'src/utils/defaultTableSettings';
-
-/* connectIntl */
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
-import { result } from 'lodash';
+import {
+  handleDelete,
+  handleDeleteAllSelected,
+} from 'src/utils/defaultTableSettings';
+import { useSnackbar } from 'notistack';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -125,43 +119,73 @@ const useStyles = makeStyles((theme) => ({
 const Results = ({
   intl,
   results,
+  schemes,
   tabvalue,
   className,
+  examtotalcount,
+  schemetotalcount,
   deleteItem,
   deleteItems,
-  getResults,
-  getSchemes
+  deleteSchemeItem,
+  deleteSchemeItems,
+  handleSearchData
 }) => {
   const theme = useTheme();
+  const { enqueueSnackbar } = useSnackbar();
   const classes = useStyles();
-  const [filters] = useState({});
-  const [page, setPage] = useState(0);
-  const [limit, setLimit] = useState(10);
-  const [query, setQuery] = useState('');
+  const [result_page, setResultPage] = useState(0);
+  const [result_limit, setResultLimit] = useState(10);
+  const [scheme_page, setSchemePage] = useState(0);
+  const [scheme_limit, setSchemeLimit] = useState(10);
   const [selectedItems, setSelectedItems] = useState([]);
-  const [sort, setSort] = useState(sortOptionsDefault[2].value);
   const [value, setValue] = React.useState(0);
+  const [searchVals, setSearchvals] = React.useState({
+    result_name: '',
+    scheme_name: ''
+  })
+
+  const handleChangeSearchVal = (name, event) => {
+    let newdata = { ...searchVals }
+    switch (name) {
+      case 'result':
+        newdata.result_name = event.target.value;
+        break;
+      case 'scheme':
+        newdata.scheme_name = event.target.value;
+        break;
+    }
+    setSearchvals(newdata)
+  };
+
+  useEffect(() => {
+    let data = { pagenum: 0, limitnum: 10, searchVal: searchVals };
+    handleSearchData(data, tabvalue);
+  }, [searchVals])
+
   useEffect(() => {
     setValue(tabvalue);
   }, [results, tabvalue])
 
   const handleChange = (event, newValue) => {
-    if (newValue === 0)
-      getResults();
-    else
-      getSchemes();
+    let data = {
+      pagenum: 0, limitnum: 10,
+      searchVal: {
+        result_name: '',
+        scheme_name: ''
+      }
+    };
+    handleSearchData(data, newValue);
   };
 
   const handleChangeIndex = (index) => {
-    if (index === 0)
-      getResults();
-    else
-      getSchemes();
-  };
-
-  const handleQueryChange = (event) => {
-    event.persist();
-    setQuery(event.target.value);
+    let data = {
+      pagenum: 0, limitnum: 10,
+      searchVal: {
+        result_name: '',
+        scheme_name: ''
+      }
+    };
+    handleSearchData(data, index);
   };
 
   const handleSelectAllItems = (event) => {
@@ -178,20 +202,44 @@ const Results = ({
     }
   };
 
-  const handlePageChange = (event, newPage) => {
-    setPage(newPage);
+  const handlePageChangeResults = (event, newPage) => {
+    setResultPage(newPage);
+    let data = { searchVal: searchVals, pagenum: parseInt(newPage + '0'), limitnum: result_limit }
+    handleSearchData(data, tabvalue)
   };
 
-  const handleLimitChange = (event) => {
-    setLimit(parseInt(event.target.value));
+  const handleLimitChangeResults = (event) => {
+    setResultLimit(parseInt(event.target.value));
+    let data = { searchVal: searchVals, pagenum: result_page, limitnum: event.target.value }
+    handleSearchData(data, tabvalue)
   };
 
-  const filteredItems = applyFilters(results, query, filters);
-  const sortedItems = applySort(filteredItems, sort);
-  const paginatedItems = applyPagination(sortedItems, page, limit);
+  const handlePageChangeScheme = (event, newPage) => {
+    setSchemePage(newPage);
+    let data = { searchVal: searchVals, pagenum: parseInt(newPage + '0'), limitnum: scheme_limit }
+    handleSearchData(data, tabvalue)
+  };
+
+  const handleLimitChangeScheme = (event) => {
+    setSchemeLimit(parseInt(event.target.value));
+    let data = { searchVal: searchVals, pagenum: scheme_page, limitnum: event.target.value }
+    handleSearchData(data, tabvalue)
+  };
+
   const enableBulkOperations = selectedItems.length > 0;
   const selectedSomeItems = selectedItems.length > 0 && selectedItems.length < results.length;
   const selectedAllItems = selectedItems.length === results.length;
+
+  const handleParse = (param) => {
+    let str = '';
+    JSON.parse(param).map((val, index) => {
+      str += val.outOf;
+      str += ' ';
+      str += val.name;
+      str += ' ';
+    })
+    return str;
+  }
 
   return (
     <div className={classes.root}>
@@ -213,8 +261,8 @@ const Results = ({
         index={value}
         onChangeIndex={handleChangeIndex}
       >
-        <TabPanel value={value} index={0} dir={theme.direction}>
-          <Card className={clsx(classes.root, className)} >
+        <TabPanel value={value} index={0} dir={theme.direction} id="alsdfjaslkdhfasdfhs">
+          <Card className={clsx(classes.root, className)} id="12345678" >
             <Box p={2} alignItems="center" >
               <TextField
                 className={classes.queryField}
@@ -230,9 +278,9 @@ const Results = ({
                     </InputAdornment>
                   )
                 }}
-                value={query}
+                value={searchVals.result_name}
                 variant="outlined"
-                onChange={handleQueryChange}
+                onChange={(e) => handleChangeSearchVal('result', e)}
                 placeholder={formatMessage(intl.search)}
               />
             </Box>
@@ -247,13 +295,13 @@ const Results = ({
                   <Button
                     variant="outlined"
                     className={classes.bulkAction}
-                  // onClick={() => handleDeleteAllSelected(
-                  //   selectedItems,
-                  //   deleteItems,
-                  //   setSelectedItems,
-                  //   enqueueSnackbar,
-                  //   { ...intl, formatMessage }
-                  // )}
+                    onClick={() => handleDeleteAllSelected(
+                      selectedItems,
+                      deleteItems,
+                      setSelectedItems,
+                      enqueueSnackbar,
+                      { ...intl, formatMessage }
+                    )}
                   >
                     {formatMessage(intl.deleteAll)}
                   </Button>
@@ -296,7 +344,7 @@ const Results = ({
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {paginatedItems.map((n, index) => {
+                    {results.map((n, index) => {
                       const isItemselected = selectedItems.includes(n.id);
 
                       return (
@@ -314,19 +362,19 @@ const Results = ({
                           </TableCell>
 
                           <TableCell align="center">
-                            {n.date}
+                            {n.examDate}
                           </TableCell>
 
                           <TableCell align="center">
-                            {n.teacher}
+                            {n.teachername}
                           </TableCell>
 
                           <TableCell align="center">
-                            {n.exam}
+                            {n.name}
                           </TableCell>
 
                           <TableCell align="center">
-                            {n.group}
+                            {n.groupname}
                           </TableCell>
 
                           <TableCell align="center">
@@ -340,12 +388,12 @@ const Results = ({
                               </SvgIcon>
                             </IconButton>
                             <IconButton
-                              // onClick={() => handleDelete(
-                              //   n.id,
-                              //   deleteContract,
-                              //   enqueueSnackbar,
-                              //   { ...intl, formatMessage }
-                              // )}
+                              onClick={() => handleDelete(
+                                n.id,
+                                deleteItem,
+                                enqueueSnackbar,
+                                { ...intl, formatMessage }
+                              )}
                               title="Delete"
                             >
                               <SvgIcon fontSize="small">
@@ -362,15 +410,18 @@ const Results = ({
             </PerfectScrollbar>
             <TablePagination
               component="div"
-              count={filteredItems.length}
-              onChangePage={handlePageChange}
-              onChangeRowsPerPage={handleLimitChange}
-              page={page}
-              rowsPerPage={limit}
+              count={examtotalcount}
+              onChangePage={handlePageChangeResults}
+              onChangeRowsPerPage={handleLimitChangeResults}
+              page={result_page}
+              rowsPerPage={result_limit}
               rowsPerPageOptions={[5, 10, 25]}
             />
           </Card>
         </TabPanel>
+
+        {/* start schema part */}
+
         <TabPanel value={value} index={1} dir={theme.direction}>
           <Card className={clsx(classes.root, className)} >
             <Box p={2} alignItems="center" display="flex" >
@@ -388,9 +439,9 @@ const Results = ({
                     </InputAdornment>
                   )
                 }}
-                value={query}
+                value={searchVals.scheme_name}
                 variant="outlined"
-                onChange={handleQueryChange}
+                onChange={(e) => handleChangeSearchVal('scheme', e)}
                 placeholder={formatMessage(intl.search)}
               />
               <Button
@@ -414,13 +465,13 @@ const Results = ({
                   <Button
                     variant="outlined"
                     className={classes.bulkAction}
-                  // onClick={() => handleDeleteAllSelected(
-                  //   selectedItems,
-                  //   deleteItems,
-                  //   setSelectedItems,
-                  //   enqueueSnackbar,
-                  //   { ...intl, formatMessage }
-                  // )}
+                    onClick={() => handleDeleteAllSelected(
+                      selectedItems,
+                      deleteSchemeItems,
+                      setSelectedItems,
+                      enqueueSnackbar,
+                      { ...intl, formatMessage }
+                    )}
                   >
                     {formatMessage(intl.deleteAll)}
                   </Button>
@@ -455,7 +506,7 @@ const Results = ({
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {paginatedItems.map((n, index) => {
+                    {schemes.map((n, index) => {
                       const isItemselected = selectedItems.includes(n.id);
 
                       return (
@@ -473,23 +524,14 @@ const Results = ({
                           </TableCell>
 
                           <TableCell align="center">
-                            {n.scheme}
+                            {n.name}
                           </TableCell>
 
                           <TableCell align="center">
-                            {n.section}
+                            {handleParse(n.scheme)}
                           </TableCell>
 
                           <TableCell align="center">
-                            <IconButton
-                              component={RouterLink}
-                              // to={formatMessage(intl.urlItemDetail, { ItemId: n.id })}
-                              title="Detail"
-                            >
-                              <SvgIcon fontSize="small">
-                                <SearchIcon />
-                              </SvgIcon>
-                            </IconButton>
                             <IconButton
                               component={RouterLink}
                               to={formatMessage(intl.urlMoreExamsEdit, { itemId: n.id, itemType: 'schemes' })}
@@ -500,12 +542,12 @@ const Results = ({
                               </SvgIcon>
                             </IconButton>
                             <IconButton
-                              // onClick={() => handleDelete(
-                              //   n.id,
-                              //   deleteLesson,
-                              //   enqueueSnackbar,
-                              //   { ...intl, formatMessage }
-                              // )}
+                              onClick={() => handleDelete(
+                                n.id,
+                                deleteSchemeItem,
+                                enqueueSnackbar,
+                                { ...intl, formatMessage }
+                              )}
                               title="Delete"
                             >
                               <SvgIcon fontSize="small">
@@ -522,11 +564,11 @@ const Results = ({
             </PerfectScrollbar>
             <TablePagination
               component="div"
-              count={filteredItems.length}
-              onChangePage={handlePageChange}
-              onChangeRowsPerPage={handleLimitChange}
-              page={page}
-              rowsPerPage={limit}
+              count={schemetotalcount}
+              onChangePage={handlePageChangeScheme}
+              onChangeRowsPerPage={handleLimitChangeScheme}
+              page={scheme_page}
+              rowsPerPage={scheme_limit}
               rowsPerPageOptions={[5, 10, 25]}
             />
           </Card>
@@ -539,12 +581,18 @@ const Results = ({
 Results.propTypes = {
   className: PropTypes.string,
   results: PropTypes.array.isRequired,
-  tabvalue: PropTypes.number
+  schemes: PropTypes.array.isRequired,
+  tabvalue: PropTypes.number,
+  examtotalcount: PropTypes.number,
+  schemetotalcount: PropTypes.number
 };
 
 Results.defaultProps = {
   results: [],
-  tabvalue: 0
+  schemes: [],
+  tabvalue: 0,
+  examtotalcount: 0,
+  schemetotalcount: 0
 };
 
 const mapStateToProps = (store) => ({

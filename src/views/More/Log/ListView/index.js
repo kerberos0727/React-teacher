@@ -34,7 +34,6 @@ const LogsListView = ({ intl, currentLanguage }) => {
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
   const [logs, setLogs] = useState([]);
-  const { enqueueSnackbar } = useSnackbar();
 
   const deleteLogs = (selectedLogs) => {
     // let temp = [];

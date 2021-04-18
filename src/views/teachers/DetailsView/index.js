@@ -14,7 +14,7 @@ import { useParams } from 'react-router-dom';
 import { Edit as EditIcon } from 'react-feather';
 import Header from 'src/components/HeaderBreadcrumbs';
 import useIsMountedRef from 'src/hooks/useIsMountedRef';
-
+import 'src/components/global';
 /* utils */
 import httpClient from 'src/utils/httpClient';
 import axios from 'src/utils/axios';
@@ -35,25 +35,34 @@ const TeacherDetailView = ({ intl }) => {
 	const params = useParams();
 	const classes = useStyles();
 	const isMountedRef = useIsMountedRef();
-	const [teacher, setTeacher] = useState(null);
+	const [teacher, setTeacher] = useState([]);
+	const [books, setBooks] = useState([]);
+	const [observers, setObservers] = useState([]);
+	const [flag, setFlag] = React.useState(false);
 
 	const getTeacher = useCallback(async () => {
-		try {
-			const response = await axios.get(`api/teacher/1`);
-			if (isMountedRef.current) {
-				setTeacher(response.data.teacher);
-				console.log(response.data.teacher)
-			}
-		} catch (err) {
-			console.log(err)
-		}
+		let data = { id: params.teacherId, searchVal: global.teacherSearchVal }
+		const url = `api/teacher/person`
+		const method = 'post';
+		httpClient[method](url, data)
+			.then(json => {
+				if (json.success && isMountedRef.current) {
+					setTeacher(json.teacher[0]);
+					setBooks(json.books);
+					setObservers(json.observers);
+					setFlag(true)
+				}
+			})
+			.catch((error) => {
+				console.log(error);
+			});
 	}, [isMountedRef]);
 
 	useEffect(() => {
 		getTeacher();
 	}, [getTeacher]);
 
-	if (!teacher) {
+	if (!flag) {
 		return null;
 	}
 
@@ -73,7 +82,11 @@ const TeacherDetailView = ({ intl }) => {
 					}}
 				/>
 				<Box mt={3}>
-					<Details teacher={teacher} />
+					<Details
+						teacher={teacher}
+						books={books}
+						observers={observers}
+					/>
 				</Box>
 			</Container>
 		</Page>

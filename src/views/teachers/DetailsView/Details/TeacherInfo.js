@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
 import {
@@ -17,8 +17,7 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
-import Calendar from 'react-calendar';
-import 'react-calendar/dist/Calendar.css';
+
 
 /* connectIntl */
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
@@ -46,9 +45,6 @@ const useStyles = makeStyles((theme) => ({
     marginRight: 10,
     "@media (max-width: 684px)": { marginBottom: 10 },
     "@media (max-width: 377px)": { width: '100%', marginBottom: 10 },
-  },
-  calendar: {
-    "@media (max-width: 599px)": { width: '100% !important' },
   }
 }));
 
@@ -83,23 +79,98 @@ const rows = [
   createData('0 (0 + 0 / 25 (-25)', '0', '0 / 25 (-25)'),
 ];
 
-const TeacherInfo = ({ teacher, intl }) => {
+const TeacherInfo = ({ teacher, books, observers, intl }) => {
   const classes = useStyles();
-  const [value, onChange] = React.useState(new Date());
+  const [count, setCount] = React.useState(0);
+  const [demodata, setDemodata] = React.useState([]);
+
+  useEffect(() => {
+    let temp = JSON.stringify(teacher);
+    let count = (temp.match(/leaveweek/g) || []).length;
+    let data = [];
+    for (let i = 0; i < count; i++)
+      data.push(i)
+    setDemodata(data)
+    setCount(count);
+    console.log(teacher, teacher.holidaysweek1, count)
+  }, [teacher])
+
+  const handlegetdetail = (id, flag) => {
+    // let key = `holidaysweek${id + 1}`
+    // alert(teacher[key])
+    let thisweek, scheduledweek, totalthisweek, total = 0, leave, hours;
+    switch (id) {
+      case 0:
+        thisweek = teacher.week1;
+        scheduledweek = 0;
+        thisweek += teacher.examsweek1;
+        totalthisweek = thisweek + scheduledweek;
+        total += thisweek + scheduledweek;
+        leave = Math.round(teacher.hoursleft) * teacher.holidaysweek1 + teacher.leaveweek1;
+        total += leave;
+        hours = totalthisweek + "(" + thisweek + scheduledweek + "/" + (teacher.hoursperWeek - leave) + (thisweek - teacher.hoursperWeek - leave) + ")";
+        total = total + "/" + teacher.holidaysweek1 + "(" + (total - teacher.hoursperWeek) * (id + 1) + ")";
+        break;
+      case 1:
+        thisweek = teacher.week2;
+        scheduledweek = 0;
+        thisweek += teacher.examsweek2;
+        totalthisweek = thisweek + scheduledweek;
+        total += thisweek + scheduledweek;
+        leave = Math.round(teacher.hoursleft) * teacher.holidaysweek2 + teacher.leaveweek2;
+        total += leave;
+        hours = totalthisweek + "(" + thisweek + scheduledweek + "/" + (teacher.hoursperWeek - leave) + (thisweek - teacher.hoursperWeek - leave) + ")";
+        total = total + "/" + teacher.holidaysweek2 + "(" + (total - teacher.hoursperWeek) * (id + 1) + ")";
+        break;
+      case 2:
+        thisweek = teacher.week3;
+        scheduledweek = 0;
+        thisweek += teacher.examsweek3;
+        totalthisweek = thisweek + scheduledweek;
+        total += thisweek + scheduledweek;
+        leave = Math.round(teacher.hoursleft) * teacher.holidaysweek3 + teacher.leaveweek3;
+        total += leave;
+        hours = totalthisweek + "(" + thisweek + scheduledweek + "/" + (teacher.hoursperWeek - leave) + (thisweek - teacher.hoursperWeek - leave) + ")";
+        total = total + "/" + teacher.holidaysweek3 + "(" + (total - teacher.hoursperWeek) * (id + 1) + ")";
+        break;
+      case 3:
+        thisweek = teacher.week4;
+        scheduledweek = 0;
+        thisweek += teacher.examsweek4;
+        totalthisweek = thisweek + scheduledweek;
+        total += thisweek + scheduledweek;
+        leave = Math.round(teacher.hoursleft) * teacher.holidaysweek4 + teacher.leaveweek4;
+        total += leave;
+        hours = totalthisweek + "(" + thisweek + scheduledweek + "/" + (teacher.hoursperWeek - leave) + (thisweek - teacher.hoursperWeek - leave) + ")";
+        total = total + "/" + teacher.holidaysweek4 + "(" + (total - teacher.hoursperWeek) * (id + 1) + ")";
+        break;
+    }
+    switch (flag) {
+      case 'hours':
+        return hours;
+        break;
+      case 'leave':
+        return leave;
+        break;
+      case 'total':
+        return total;
+        break;
+    }
+  }
+
+  const handlegetLeave = (id) => {
+    return id
+  }
+  const handlegetTotal = (id) => {
+    return id
+  }
 
   return (
     <Card className={clsx(classes.root)} >
       <CardHeader title={formatMessage(intl.teacherDetail)} />
       <Divider />
       <Grid container>
-        <Grid item xs={12} sm={4} style={{ padding: 15 }}>
-          <Calendar
-            onChange={onChange}
-            value={value}
-            className={classes.calendar}
-          />
-        </Grid>
-        <Grid item xs={12} sm={8} style={{ padding: 10 }}>
+        <Grid item xs={12} style={{ padding: 10 }}>
           <TableContainer component={Paper}>
             <Table aria-label="customized table">
               <TableHead>
@@ -110,11 +181,11 @@ const TeacherInfo = ({ teacher, intl }) => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.map((row, index) => (
+                {demodata.map((row, index) => (
                   <StyledTableRow key={index}>
-                    <StyledTableCell>{row.hours}</StyledTableCell>
-                    <StyledTableCell>{row.leave}</StyledTableCell>
-                    <StyledTableCell>{row.total}</StyledTableCell>
+                    <StyledTableCell>{handlegetdetail(index, "hours")}</StyledTableCell>
+                    <StyledTableCell>{handlegetdetail(index, "leave")}</StyledTableCell>
+                    <StyledTableCell>{handlegetdetail(index, "total")}</StyledTableCell>
                   </StyledTableRow>
                 ))}
               </TableBody>
@@ -155,13 +226,12 @@ const TeacherInfo = ({ teacher, intl }) => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {/* {rows.map((row, index) => (
+                  {books.map((row, index) => (
                     <StyledTableRow key={index}>
-                      <StyledTableCell>{row.hours}</StyledTableCell>
-                      <StyledTableCell>{row.leave}</StyledTableCell>
-                      <StyledTableCell>{row.total}</StyledTableCell>
+                      <StyledTableCell>{row.name}</StyledTableCell>
+                      <StyledTableCell>{row.amount}</StyledTableCell>
                     </StyledTableRow>
-                  ))} */}
+                  ))}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -176,13 +246,12 @@ const TeacherInfo = ({ teacher, intl }) => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {/* {rows.map((row, index) => (
+                  {observers.map((row, index) => (
                     <StyledTableRow key={index}>
-                      <StyledTableCell>{row.hours}</StyledTableCell>
-                      <StyledTableCell>{row.leave}</StyledTableCell>
-                      <StyledTableCell>{row.total}</StyledTableCell>
+                      <StyledTableCell>{row.lessonDate}</StyledTableCell>
+                      <StyledTableCell>{row.userName}</StyledTableCell>
                     </StyledTableRow>
-                  ))} */}
+                  ))}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -195,7 +264,9 @@ const TeacherInfo = ({ teacher, intl }) => {
 
 TeacherInfo.propTypes = {
   className: PropTypes.string,
-  teacher: PropTypes.object.isRequired
+  teacher: PropTypes.object.isRequired,
+  books: PropTypes.object.isRequired,
+  observers: PropTypes.object.isRequired,
 };
 
 const mapStateToProps = (store) => ({

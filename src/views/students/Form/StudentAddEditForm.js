@@ -47,7 +47,7 @@ import TextField from '@material-ui/core/TextField';
 import httpClient from 'src/utils/httpClient';
 import 'src/components/global';
 /* connectIntl */
-import { connectIntl, formatMessage } from 'src/contexts/Intl';
+import { connectIntl } from 'src/contexts/Intl';
 import {
   getLanguages,
   getLevels,
@@ -60,7 +60,7 @@ var { global_howdidyouhear } = getHowdidyouhear();
 var { global_levels } = getLevels();
 var { global_allgroups } = getAllGroups();
 var { global_languages } = getLanguages();
-var { global_alltextbooks } = getLanguages();
+var { global_alltextbooks } = getAllTextbooks();
 var arrGroupinfo;
 
 function not(a, b) {
@@ -772,13 +772,13 @@ const StudentAddEditForm = ({ student, update, intl }) => {
                                 setOldTextbookRight(textbookright)
                                 if (json.success && isMountedRef.current) {
                                   enqueueSnackbar(
-                                    formatMessage(intl[(update) ? 'Updated successfully' : 'Added successfully']),
+                                    update ? 'Updated successfully' : 'Added successfully',
                                     { variant: 'success' }
                                   )
                                 }
                                 else
                                   enqueueSnackbar(
-                                    formatMessage('FAILD'),
+                                    'FAILD',
                                     { variant: 'error' }
                                   )
                               })

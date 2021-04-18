@@ -34,16 +34,35 @@ const ExamEditView = ({ match, intl }) => {
   const params = useParams();
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState([]);
+  const [schedules, setSchedules] = useState([]);
+  const [flag, setFlag] = React.useState(false);
 
   const getResult = useCallback(async () => {
-    try {
-      const response = await axios.get(`api/more/${params.itemType}/1`);
-      if (isMountedRef.current) {
-        setResult(response.data.result);
-      }
-    } catch (err) {
-      console.log(err)
+    if (params.itemType === 'result') {
+      httpClient.get(`api/more/exams/${params.itemId}`)
+        .then(json => {
+          if (json.success && isMountedRef.current) {
+            setResult(json.result[0]);
+            setSchedules(json.schedules);
+            setFlag(true);
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
+    else {
+      httpClient.get(`api/more/exams/scheme/${params.itemId}`)
+        .then(json => {
+          if (json.success && isMountedRef.current) {
+            setResult(json.result[0]);
+            setFlag(true);
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     }
   }, [isMountedRef, params.itemId]);
 
@@ -51,7 +70,7 @@ const ExamEditView = ({ match, intl }) => {
     getResult();
   }, [getResult]);
 
-  if (!result) {
+  if (!flag) {
     return null;
   }
 
@@ -65,7 +84,12 @@ const ExamEditView = ({ match, intl }) => {
       </Container>
       <Box mt={3}>
         <Container maxWidth="lg">
-          <ExamEditForm update result={result} itemType={params.itemType} />
+          <ExamEditForm
+            update
+            result={result}
+            schedules={schedules}
+            itemType={params.itemType}
+          />
         </Container>
       </Box>
     </Page>

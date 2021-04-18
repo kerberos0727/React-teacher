@@ -12,7 +12,6 @@ import {
   SvgIcon,
   Checkbox,
   TableRow,
-  useTheme,
   TableBody,
   TableCell,
   TableHead,
@@ -28,17 +27,13 @@ import {
 } from 'react-feather';
 import { useSnackbar } from 'notistack';
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
-import EqualizerIcon from '@material-ui/icons/Equalizer';
 
 /* utils */
 import {
   applySort,
   handleDelete,
   applyFilters,
-  getComparator,
-  applyPagination,
   sortOptionsDefault,
-  descendingComparator,
   handleDeleteAllSelected,
 } from 'src/utils/defaultTableSettings';
 

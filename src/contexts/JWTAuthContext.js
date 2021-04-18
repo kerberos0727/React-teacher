@@ -24,6 +24,11 @@ import {
   setAllTeachers,
   setLessoninfos,
   setAllLessoninfos,
+  setAllUsers,
+  setRooms,
+  setAllRooms,
+  setSchemes,
+  setAllSchemes,
   setTopics,
   setAllTopics,
   setStudents,
@@ -257,6 +262,11 @@ export const AuthProviderWrapper = ({ children, intl }) => {
     setAllTeachers(null);
     setLessoninfos(null);
     setAllLessoninfos(null);
+    setAllUsers(null);
+    setRooms(null);
+    setAllRooms(null);
+    setSchemes(null);
+    setAllSchemes(null);
     setTopics(null);
     setAllTopics(null);
     setStudents(null);

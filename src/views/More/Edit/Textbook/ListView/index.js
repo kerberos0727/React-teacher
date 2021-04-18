@@ -34,7 +34,6 @@ const TextbookListView = ({ intl, currentLanguage }) => {
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
   const [textbooks, setTextbooks] = useState([]);
-  const { enqueueSnackbar } = useSnackbar();
 
   const deleteTextbooks = (selectedtextbooks) => {
     // let temp = [];

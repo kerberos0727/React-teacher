@@ -36,7 +36,6 @@ const TextbooksListView = ({ intl, currentLanguage }) => {
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
   const [textbooks, setTextbooks] = useState([]);
-  const { enqueueSnackbar } = useSnackbar();
   const [totalcount, setTotalcount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = React.useState(false);

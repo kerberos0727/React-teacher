@@ -34,7 +34,6 @@ const HeardListView = ({ intl, currentLanguage }) => {
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
   const [heards, setHeards] = useState([]);
-  const { enqueueSnackbar } = useSnackbar();
 
   const deleteHeards = (selectedheards) => {
     // let temp = [];

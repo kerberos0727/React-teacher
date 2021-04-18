@@ -34,7 +34,6 @@ const LanguageListView = ({ intl }) => {
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
   const [languages, setLanguages] = useState([]);
-  const { enqueueSnackbar } = useSnackbar();
 
   const deleteLanguages = (selectedlanguages) => {
     // let temp = [];

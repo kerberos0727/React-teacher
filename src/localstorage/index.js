@@ -346,3 +346,33 @@ export const getAllRooms = () => {
     }
 }
 // rooms end
+
+// schemes start
+export const setSchemes = (schemes) => {
+    if (schemes) {
+        localStorage.setItem('schemes', schemes);
+    } else {
+        localStorage.removeItem('schemes');
+    }
+};
+
+export const getSchemes = () => {
+    return {
+        global_schemes: window.localStorage.getItem('schemes'),
+    }
+}
+
+export const setAllSchemes = (allschemes) => {
+    if (allschemes) {
+        localStorage.setItem('allschemes', allschemes);
+    } else {
+        localStorage.removeItem('allschemes');
+    }
+};
+
+export const getAllSchemes = () => {
+    return {
+        global_allschemes: window.localStorage.getItem('allschemes'),
+    }
+}
+// schemes end

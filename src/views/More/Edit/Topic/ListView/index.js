@@ -34,7 +34,6 @@ const TopicListView = ({ intl, currentLanguage }) => {
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
   const [topics, setTopics] = useState([]);
-  const { enqueueSnackbar } = useSnackbar();
 
   const deleteTopics = (selectedtopics) => {
     // let temp = [];

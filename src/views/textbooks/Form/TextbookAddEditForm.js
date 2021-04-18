@@ -20,8 +20,8 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import List from '@material-ui/core/List';
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
 import Paper from '@material-ui/core/Paper';
-import httpClient from 'src/utils/httpClient';
 import { useHistory } from 'react-router';
+import httpClient from 'src/utils/httpClient';
 import useIsMountedRef from 'src/hooks/useIsMountedRef';
 import { useSnackbar } from 'notistack';
 import {
@@ -261,7 +261,6 @@ const TextbookAddEditForm = ({ textbook, students, update, intl }) => {
             oldstudents: oldstudents,
             id: textbookid
           };
-          console.log(senddata)
 
           const url = `api/textbooks/${(update) ? 'update' : 'create'}`
           const method = (update) ? 'put' : 'post';
@@ -270,13 +269,13 @@ const TextbookAddEditForm = ({ textbook, students, update, intl }) => {
               if (json.success && isMountedRef.current) {
                 setOldStudnets(rightStudnets)
                 enqueueSnackbar(
-                  formatMessage(intl[(update) ? 'Updated successfully' : 'Added successfully']),
+                  update ? 'Updated successfully' : 'Added successfully',
                   { variant: 'success' }
                 )
               }
               else
                 enqueueSnackbar(
-                  formatMessage('FAILD'),
+                  'FAILD',
                   { variant: 'error' }
                 )
             })
@@ -382,7 +381,7 @@ const TextbookAddEditForm = ({ textbook, students, update, intl }) => {
                       </Grid>
                       <Grid item md={2} xs={12}>
                         <Grid container direction="column" alignItems="center">
-                          <div className={classes.boldletter}>Books</div>
+                          <div className={classes.boldletter}>Students</div>
                           <Button
                             color="secondary"
                             variant="contained"
@@ -427,7 +426,7 @@ const TextbookAddEditForm = ({ textbook, students, update, intl }) => {
                           type="submit"
                         >
                           Save
-                      </Button>
+                        </Button>
                       </div>
                     </div>
                   </Grid>

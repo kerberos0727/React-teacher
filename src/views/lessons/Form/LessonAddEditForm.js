@@ -37,7 +37,7 @@ import 'src/components/global';
 import useIsMountedRef from 'src/hooks/useIsMountedRef';
 
 /* connectIntl */
-import { connectIntl, formatMessage } from 'src/contexts/Intl';
+import { connectIntl } from 'src/contexts/Intl';
 
 import {
   getLanguages,
@@ -531,7 +531,6 @@ const LessonAddEditForm = ({ lesson, textbooks, students, topics, update, intl }
               groupnameId: groupnameId
             }
           };
-          console.log(senddata)
           const url = `api/lessons/${(update) ? 'update' : 'create'}`
           const method = (update) ? 'put' : 'post';
           httpClient[method](url, senddata)
@@ -541,13 +540,13 @@ const LessonAddEditForm = ({ lesson, textbooks, students, topics, update, intl }
                 setOldStateTopics(state_topics);
                 setOldStateTextbooks(old_state_textbooks)
                 enqueueSnackbar(
-                  formatMessage(intl[(update) ? 'Updated successfully' : 'Added successfully']),
+                  update ? 'Updated successfully' : 'Added successfully',
                   { variant: 'success' }
                 )
               }
               else
                 enqueueSnackbar(
-                  formatMessage('FAILD'),
+                  'FAILD',
                   { variant: 'error' }
                 )
             })

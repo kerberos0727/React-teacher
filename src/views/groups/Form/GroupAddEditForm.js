@@ -24,7 +24,7 @@ import List from '@material-ui/core/List';
 import httpClient from 'src/utils/httpClient';
 import useIsMountedRef from 'src/hooks/useIsMountedRef';
 import { useSnackbar } from 'notistack';
-import { connectIntl, formatMessage } from 'src/contexts/Intl';
+import { connectIntl } from 'src/contexts/Intl';
 import { useHistory } from 'react-router';
 import {
   getLevels,
@@ -414,13 +414,13 @@ const GroupAddEditForm = ({ group, students, update, intl }) => {
               if (json.success && isMountedRef.current) {
                 setOldStudnets(rightStudnets)
                 enqueueSnackbar(
-                  formatMessage(intl[(update) ? 'Updated successfully' : 'Added successfully']),
+                  update ? 'Updated successfully' : 'Added successfully',
                   { variant: 'success' }
                 )
               }
               else
                 enqueueSnackbar(
-                  formatMessage('FAILD'),
+                  'FAILD',
                   { variant: 'error' }
                 )
             })

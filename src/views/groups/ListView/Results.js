@@ -159,7 +159,7 @@ const Results = ({
 
   const handleLimitChange = (event) => {
     setLimit(parseInt(event.target.value));
-    let data = { searchVals: searchVals, pagenum: page, imitnum: event.target.value }
+    let data = { searchVals: searchVals, pagenum: page, limitnum: event.target.value }
     if (searchVals.name !== '' || searchVals.groups !== false || searchVals.private !== false || searchVals.hour !== false || searchVals.day !== false || searchVals.friday !== false || searchVals.saturday !== false)
       handleSearchData(data)
     else

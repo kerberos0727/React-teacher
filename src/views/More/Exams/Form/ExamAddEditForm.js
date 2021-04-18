@@ -1,4 +1,6 @@
 import React, { useEffect } from 'react';
+import moment from 'moment';
+import { useHistory } from 'react-router';
 import clsx from 'clsx';
 import { Formik } from 'formik';
 import PropTypes from 'prop-types';
@@ -24,26 +26,28 @@ import RadioGroup from '@material-ui/core/RadioGroup';
 import FormControl from '@material-ui/core/FormControl';
 import { connectIntl } from 'src/contexts/Intl';
 import Autocomplete from '@material-ui/lab/Autocomplete';
+import httpClient from 'src/utils/httpClient';
+import useIsMountedRef from 'src/hooks/useIsMountedRef';
+import { useSnackbar } from 'notistack';
 import {
   KeyboardDatePicker,
 } from '@material-ui/pickers';
+import {
+  getTeachers,
+  getTextbooks,
+  getSchemes,
+  getAllTeachers,
+  getAllTextbooks,
+  getAllSchemes
+} from 'src/localstorage';
 
-const top100Films = [
-  { title: 'The Shawshank Redemption', year: 1994 },
-  { title: 'The Godfather', year: 1972 },
-  { title: 'The Godfather: Part II', year: 1974 }
-]
+var { global_teachers } = getTeachers();
+var { global_allteachers } = getAllTeachers();
+var { global_schemes } = getSchemes();
+var { global_allschemes } = getAllSchemes();
+var { global_textbooks } = getTextbooks();
+var { global_alltextbooks } = getAllTextbooks();
 
-const schedules = [
-  { name: '', grammar: 40, vocab: 40, pron: 20, reading: 15, listening: 10, speaking: 10, total: 135 },
-  { name: 'Adilia mercedes Hemandez Argueta', grammar: '', vocab: '', pron: '', reading: '', listening: '', speaking: '', total: '' },
-  { name: 'Adilia mercedes Hemandez Argueta', grammar: '', vocab: '', pron: '', reading: '', listening: '', speaking: '', total: '' },
-  { name: 'Adilia mercedes Hemandez Argueta', grammar: '', vocab: '', pron: '', reading: '', listening: '', speaking: '', total: '' },
-  { name: 'Adilia mercedes Hemandez Argueta', grammar: '', vocab: '', pron: '', reading: '', listening: '', speaking: '', total: '' },
-  { name: 'Adilia mercedes Hemandez Argueta', grammar: '', vocab: '', pron: '', reading: '', listening: '', speaking: '', total: '' },
-  { name: 'Adilia mercedes Hemandez Argueta', grammar: '', vocab: '', pron: '', reading: '', listening: '', speaking: '', total: '' },
-  { name: 'Adilia mercedes Hemandez Argueta', grammar: '', vocab: '', pron: '', reading: '', listening: '', speaking: '', total: '' }
-]
 const CssTextField = withStyles({
   root: {
     '& label': {
@@ -120,27 +124,103 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const ExamAddEditForm = ({ result, update, itemType }) => {
+const ExamAddEditForm = ({ result, schedules, update, itemType, intl }) => {
   const classes = useStyles();
-
+  const history = useHistory();
+  const { enqueueSnackbar } = useSnackbar();
+  const isMountedRef = useIsMountedRef();
+  const [combovalues, setCombovalues] = React.useState({
+    teacher: result.teachername,
+    scheme: result.markingname,
+    textbook: result.textbookname,
+  });
   const [sections, setSections] = React.useState([]);
+  const [bigcatagory, setBigcatagory] = React.useState('')
+  const [smallcatagory, setSmallcatagory] = React.useState('')
+  const [type, setType] = React.useState(result.type)
+  const [header, setHeader] = React.useState([]);
 
   useEffect(() => {
     let data = []
     if (sections.length === 0)
-      data.push(0)
+      data.push({ outOf: "", name: "" })
     setSections(data)
+    setCagagories(result.type)
+    setScheduleDatas();
+    handleParse();
   }, [])
+
+  const handleParse = () => {
+    if (result.scheme !== undefined)
+      setSections(JSON.parse(result.scheme))
+  }
+
+  const setScheduleDatas = () => {
+    if (schedules.length !== 0) {
+      let head = [];
+      for (var key in JSON.parse(schedules[0].results)) {
+        head.push(key)
+      }
+      setHeader(head)
+    }
+  }
+
+  const setCagagories = (type) => {
+    switch (type) {
+      case 1:
+        setBigcatagory('textbook');
+        setSmallcatagory('endofcourse');
+        setType(1);
+        break;
+      case 2:
+        setBigcatagory('textbook');
+        setSmallcatagory('progress');
+        setType(2);
+        break;
+      case 3:
+        setBigcatagory('other');
+        setType(3);
+        break;
+      case 4:
+        setBigcatagory('upper');
+        setType(4);
+        break;
+    }
+  }
+
+  const handleChangeBigCatagory = (event) => {
+    setBigcatagory(event.target.value)
+    switch (event.target.value) {
+      case 'textbook':
+        if (smallcatagory === 'progress')
+          setType(2);
+        else
+          setType(1);
+        break;
+      case 'other':
+        setType(3);
+        break;
+      case 'upper':
+        setType(4);
+        break;
+    }
+  }
+  const handleChangeSmallCatagory = (event) => {
+    setSmallcatagory(event.target.value)
+    if (event.target.value === 'progress')
+      setType(2)
+    else
+      setType(1)
+  }
 
   const handleAddSectionItem = () => {
     let data = [];
-    let demo = '0';
     if (sections.length === 0)
-      data.push(demo)
+      data.push({ outOf: "", name: "" })
     else {
       for (let i = 0; i < sections.length; i++)
-        data.push(i)
-      data.push(sections.length)
+        data.push(sections[i])
+      data.push({ outOf: "", name: "" })
     }
     setSections(data);
   }
@@ -153,27 +233,102 @@ const ExamAddEditForm = ({ result, update, itemType }) => {
     }
   }
 
+  const handleChangeCombo = (name, value) => {
+    setCombovalues({ ...combovalues, [name]: value });
+  };
+
+  const handleChangeSchemeData = (event, index, flag) => {
+    let data = [...sections]
+    if (flag === 'name') {
+      data[index].name = event.target.value
+    }
+    else
+      data[index].outOf = event.target.value
+    setSections(data)
+  }
+
   return (
     <Formik
       initialValues={{
-        // start results tab variables
-        textbook: result.textbook || '',
-        textbook_name: result.textbook_name || '',
-        end_of_course_exam: result.end_of_course_exam,
-        exam_date: result.exam_date || '',
-        teacher: result.teacher || '',
-        test_name: result.test_name || '',
-        marking_scheme: result.marking_scheme || '',
-        scheduled_exam: result.scheduled_exam,
-        // start marking tab variables
-        name: result.name || '',
-        weighted: result.weighted || '',
-        sectionName: result.sectionName || '',
-        outof: result.outof || ''
+        test_name: result.name || '',
+        scheduled: result.scheduled === "Y" ? true : false,
+        exam_date: result.examDate || new Date(),
+        schemeType: result.type === 0 ? "weighted" : "percentages"
       }}
       onSubmit={
         async (values, { setErrors }) => {
+          if (itemType === 'result') {
+            let teacherId = 0, schemeId = 0, textbookId = 0;
+            let teachers = JSON.parse(global_allteachers);
+            let schemes = JSON.parse(global_allschemes);
+            let textbooks = JSON.parse(global_alltextbooks);
 
+            for (let i = 0; i < teachers.length; i++) {
+              if (teachers[i].name === combovalues.teacher)
+                teacherId = teachers[i].id;
+            }
+            for (let i = 0; i < schemes.length; i++) {
+              if (schemes[i].name === combovalues.scheme)
+                schemeId = schemes[i].id;
+            }
+            for (let i = 0; i < textbooks.length; i++) {
+              if (textbooks[i].name === combovalues.textbook)
+                textbookId = textbooks[i].id;
+            }
+            let senddata = {
+              id: result.id,
+              textbookid: textbookId,
+              teacherid: teacherId,
+              type: type,
+              name: values.test_name,
+              examDate: values.exam_date,
+              groupid: result.groupid,
+              scheduled: values.scheduled ? "Y" : "N",
+              markingscheme: schemeId
+            }
+            const url = `api/more/exams/update`
+            const method = 'put';
+            httpClient[method](url, senddata)
+              .then(json => {
+                if (json.success && isMountedRef.current) {
+                  enqueueSnackbar(
+                    'Updated successfully',
+                    { variant: 'success' }
+                  )
+                }
+              })
+              .catch((error) => {
+                enqueueSnackbar(
+                  'FAILD',
+                  { variant: 'error' }
+                )
+              });
+          }
+          else {
+            let senddata = {
+              id: result.id,
+              name: values.test_name,
+              schemeType: values.schemeType === "weighted" ? 0 : 1,
+              scheme: JSON.stringify(sections)
+            }
+            const url = `api/more/exams/scheme/${(update) ? 'update' : 'create'}`
+            const method = (update) ? 'put' : 'post';
+            httpClient[method](url, senddata)
+              .then(json => {
+                if (json.success && isMountedRef.current) {
+                  enqueueSnackbar(
+                    'Updated successfully',
+                    { variant: 'success' }
+                  )
+                }
+              })
+              .catch((error) => {
+                enqueueSnackbar(
+                  'FAILD',
+                  { variant: 'error' }
+                )
+              });
+          }
         }
       }
     >
@@ -199,7 +354,7 @@ const ExamAddEditForm = ({ result, update, itemType }) => {
                         <Grid container>
                           <Grid item xs={12} sm={8}>
                             <FormControl component="fieldset">
-                              <RadioGroup aria-label="gender" name="textbook" value={values.textbook} onChange={handleChange}>
+                              <RadioGroup aria-label="gender" name="textbook" value={bigcatagory} onChange={handleChangeBigCatagory}>
                                 <div
                                   style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}
                                 >
@@ -208,33 +363,40 @@ const ExamAddEditForm = ({ result, update, itemType }) => {
                                     style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}
                                   >
                                     <Autocomplete
-                                      options={top100Films}
-                                      getOptionLabel={(option) => option.title}
+                                      id="textbook"
+                                      options={global.textbooks.length !== 0 ? global.textbooks : JSON.parse(global_textbooks)}
                                       className={classes.recomment_combo}
+                                      getOptionLabel={(option) => option}
                                       renderInput={(params) => <CssTextField {...params} />}
+                                      onChange={(event, value) => { handleChangeCombo('textbook', value) }}
+                                      value={combovalues.textbook}
+                                      disabled={bigcatagory !== "textbook" ? true : false}
                                     />
-                                    <FormControl component="fieldset">
-                                      <RadioGroup aria-label="gender" name="textbook" value={values.end_of_course_exam} onChange={handleChange} style={{ flexDirection: 'row' }}>
-                                        <FormControlLabel value="end_of_course_exam" control={<Radio />} label="End of course exam" />
-                                        <FormControlLabel value="progress_test" control={<Radio />} label="Progress test" />
+                                    <FormControl component="fieldset"
+                                      disabled={bigcatagory !== "textbook" ? true : false}
+                                    >
+                                      <RadioGroup aria-label="gender" name="textbook" value={smallcatagory} onChange={handleChangeSmallCatagory} style={{ flexDirection: 'row' }}>
+                                        <FormControlLabel value="endofcourse" control={<Radio />} label="End of course exam" />
+                                        <FormControlLabel value="progress" control={<Radio />} label="Progress test" />
                                       </RadioGroup>
                                     </FormControl>
                                   </div>
                                 </div>
-                                <FormControlLabel value="upper_int" control={<Radio />} label="Upper Int A" />
+                                <FormControlLabel value="upper" control={<Radio />} label="Upper Int A" />
                                 <div
                                   style={{ display: 'flex', flexWrap: 'wrap' }}
                                 >
-                                  <FormControlLabel value="othere" control={<Radio />} label="Other" />
+                                  <FormControlLabel value="other" control={<Radio />} label="Other" />
                                   <div
                                     style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}
                                   >
                                     <div className={classes.boldletter}>Test name:</div>
                                     <CssTextField
-                                      id="test"
+                                      id="test_name"
+                                      disabled={bigcatagory !== "other" ? true : false}
                                       className={classes.recomment_combo}
                                       value={values.test_name}
-                                    // onChange={handleChange}
+                                      onChange={handleChange}
                                     />
                                   </div>
                                 </div>
@@ -251,7 +413,7 @@ const ExamAddEditForm = ({ result, update, itemType }) => {
                                 format="MM/DD/YYYY"
                                 name="exam_date"
                                 value={values.exam_date}
-                                onChange={(date) => setFieldValue('exam_date', date)}
+                                onChange={(date) => setFieldValue('exam_date', moment(date).format("YYYY-MM-DD"))}
                               />
                             </div>
                             <div
@@ -259,10 +421,13 @@ const ExamAddEditForm = ({ result, update, itemType }) => {
                             >
                               <div className={classes.boldletter}>Teacher:</div>
                               <Autocomplete
-                                options={top100Films}
-                                getOptionLabel={(option) => option.title}
+                                id="teacher"
+                                options={global.teachers.length !== 0 ? global.teachers : JSON.parse(global_teachers)}
+                                getOptionLabel={(option) => option}
                                 className={classes.recomment_combo}
                                 renderInput={(params) => <CssTextField {...params} />}
+                                onChange={(event, value) => { handleChangeCombo('teacher', value) }}
+                                value={combovalues.teacher}
                               />
                             </div>
                             <div
@@ -270,10 +435,13 @@ const ExamAddEditForm = ({ result, update, itemType }) => {
                             >
                               <div className={classes.boldletter}>Marking scheme:</div>
                               <Autocomplete
-                                options={top100Films}
-                                getOptionLabel={(option) => option.title}
+                                id="scheme"
+                                options={global.schemes.length !== 0 ? global.schemes : JSON.parse(global_schemes)}
+                                getOptionLabel={(option) => option}
                                 className={classes.recomment_combo}
                                 renderInput={(params) => <CssTextField {...params} />}
+                                onChange={(event, value) => { handleChangeCombo('scheme', value) }}
+                                value={combovalues.scheme}
                               />
                             </div>
                           </Grid>
@@ -281,16 +449,16 @@ const ExamAddEditForm = ({ result, update, itemType }) => {
                             <FormControlLabel
                               control={
                                 <Checkbox
-                                  name="scheduled_exam"
+                                  name="scheduled"
                                   color="primary"
-                                  checked={values.scheduled_exam}
+                                  checked={values.scheduled}
                                   onChange={handleChange}
                                 />
                               }
                               label="Scheduled Exam (uncheck to add results)"
                             />
                           </div>
-                          <Grid item xs={12} style={values.scheduled_exam ? { width: '100%', display: 'initial' } : { width: '100%', display: 'none' }}>
+                          <Grid item xs={12} style={{ width: '100%' }}>
                             <Table>
                               <TableHead>
                                 <TableRow>
@@ -299,34 +467,15 @@ const ExamAddEditForm = ({ result, update, itemType }) => {
 
                                   </TableCell>
 
-                                  <TableCell align="center">
-                                    Grammer
-                                  </TableCell>
-
-                                  <TableCell align="center">
-                                    Vocab
-                                  </TableCell>
-
-                                  <TableCell align="center">
-                                    Pron
-                                  </TableCell>
-
-                                  <TableCell align="center">
-                                    Reading
-                                  </TableCell>
-
-                                  <TableCell align="center">
-                                    Listening
-                                  </TableCell>
-
-                                  <TableCell align="center">
-                                    Speaking
-                                  </TableCell>
-
-                                  <TableCell align="center">
-                                    Total
-                                  </TableCell>
-
+                                  {
+                                    header.map((val, index) => {
+                                      return (
+                                        <TableCell align="center">
+                                          {val}
+                                        </TableCell>
+                                      )
+                                    })
+                                  }
                                 </TableRow>
                               </TableHead>
                               <TableBody>
@@ -338,37 +487,19 @@ const ExamAddEditForm = ({ result, update, itemType }) => {
                                       key={index}
                                     >
 
-                                      <TableCell align="center">
-                                        {n.name}
+                                      <TableCell align="left">
+                                        {n.studentname}
                                       </TableCell>
 
-                                      <TableCell align="center">
-                                        {n.grammar}
-                                      </TableCell>
-
-                                      <TableCell align="center">
-                                        {n.vocab}
-                                      </TableCell>
-
-                                      <TableCell align="center">
-                                        {n.pron}
-                                      </TableCell>
-
-                                      <TableCell align="center">
-                                        {n.reading}
-                                      </TableCell>
-
-                                      <TableCell align="center">
-                                        {n.listening}
-                                      </TableCell>
-
-                                      <TableCell align="center">
-                                        {n.speaking}
-                                      </TableCell>
-
-                                      <TableCell align="center">
-                                        {n.total}
-                                      </TableCell>
+                                      {
+                                        header.map((val, index) => {
+                                          return (
+                                            <TableCell align="center">
+                                              {JSON.parse(n.results)[val] !== undefined ? JSON.parse(n.results)[val].substr(JSON.parse(n.results)[val].lastIndexOf("/") + 1, JSON.parse(n.results)[val].length) : ""}
+                                            </TableCell>
+                                          )
+                                        })
+                                      }
                                     </TableRow>
                                   );
                                 })}
@@ -382,12 +513,14 @@ const ExamAddEditForm = ({ result, update, itemType }) => {
                               color="secondary"
                               variant="contained"
                               style={{ marginRight: 10 }}
+                              onClick={() => { history.goBack() }}
                             >
                               Cancel
                             </Button>
                             <Button
                               color="secondary"
                               variant="contained"
+                              type={'submit'}
                             >
                               Save
                             </Button>
@@ -406,18 +539,19 @@ const ExamAddEditForm = ({ result, update, itemType }) => {
                               <div className={classes.boldletter}>Name:</div>
                               <CssTextField
                                 required
-                                name="contract"
+                                name="test_name"
                                 className={classes.inputStyle}
                                 style={{ width: 300 }}
-                                value={values.name}
+                                value={values.test_name}
+                                onChange={handleChange}
                               />
                             </div>
                             <div style={{ display: 'flex', flexWrap: 'wrap' }}>
                               <div className={classes.boldletter} style={{ marginTop: 10 }}>Total Calculation:</div>
                               <FormControl component="fieldset">
-                                <RadioGroup aria-label="gender" name="textbook" value={values.weighted} onChange={handleChange}>
+                                <RadioGroup aria-label="gender" name="schemeType" value={values.schemeType} onChange={handleChange}>
                                   <FormControlLabel value="weighted" control={<Radio />} label="Weighted Average" />
-                                  <FormControlLabel value="average" control={<Radio />} label="Average of Percentages" />
+                                  <FormControlLabel value="percentages" control={<Radio />} label="Average of Percentages" />
                                 </RadioGroup>
                               </FormControl>
                             </div>
@@ -435,19 +569,17 @@ const ExamAddEditForm = ({ result, update, itemType }) => {
                                     <div style={{ display: 'flex', alignItems: 'center', marginTop: 10 }}>
                                       <div>Section Name:</div>
                                       <CssTextField
-                                        id="sectionName"
                                         className={classes.recomment_combo}
-                                        value={values.sectionName}
-                                      // onChange={handleChange}
+                                        value={val.name}
+                                        onChange={(e) => { handleChangeSchemeData(e, index, 'name') }}
                                       />
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', marginTop: 10 }}>
                                       <div>Out of:</div>
                                       <CssTextField
-                                        id="outof"
                                         className={classes.recomment_combo}
-                                        value={values.outof}
-                                      // onChange={handleChange}
+                                        value={val.outOf}
+                                        onChange={(e) => { handleChangeSchemeData(e, index, 'outof') }}
                                       />
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto', marginTop: 10 }}>
@@ -475,6 +607,25 @@ const ExamAddEditForm = ({ result, update, itemType }) => {
                               })
                             }
                           </Grid>
+                          <Grid item xs={12}
+                            style={{ marginTop: 10, textAlign: 'right' }}
+                          >
+                            <Button
+                              color="secondary"
+                              variant="contained"
+                              style={{ marginRight: 10 }}
+                              onClick={() => { history.goBack() }}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              color="secondary"
+                              variant="contained"
+                              type={'submit'}
+                            >
+                              Save
+                            </Button>
+                          </Grid>
                         </Grid>
                       </Grid>
                       <Grid item xs={12} sm={3}></Grid>
@@ -492,12 +643,14 @@ const ExamAddEditForm = ({ result, update, itemType }) => {
 ExamAddEditForm.propTypes = {
   update: PropTypes.bool,
   result: PropTypes.object,
+  schedules: PropTypes.array,
   className: PropTypes.string,
   itemType: PropTypes.string
 };
 
 ExamAddEditForm.defaultProps = {
   result: {},
+  schedules: [],
   itemType: PropTypes.string
 }
 

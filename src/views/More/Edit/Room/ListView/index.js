@@ -34,7 +34,6 @@ const RoomListView = ({ intl, currentLanguage }) => {
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
   const [rooms, setRooms] = useState([]);
-  const { enqueueSnackbar } = useSnackbar();
 
   const deleteRooms = (selectedrooms) => {
     // let temp = [];

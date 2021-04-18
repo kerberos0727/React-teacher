@@ -40,7 +40,6 @@ const GroupsListView = ({ intl, currentLanguage }) => {
   const isMountedRef = useIsMountedRef();
   const [groups, setGroups] = useState([]);
   const [totalcount, setTotalcount] = useState(0);
-  const { enqueueSnackbar } = useSnackbar();
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = React.useState(false);
 

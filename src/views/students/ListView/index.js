@@ -29,22 +29,19 @@ import {
   setTopics,
   setAllTopics,
   setRooms,
-  setAllRooms
-} from 'src/localstorage';
-
-/* utils */
-import httpClient from 'src/utils/httpClient';
-import Backdrop from '@material-ui/core/Backdrop';
-import CircularProgress from '@material-ui/core/CircularProgress';
-/* connectIntl */
-import { connectIntl, formatMessage } from 'src/contexts/Intl';
-import {
+  setAllRooms,
+  setSchemes,
+  setAllSchemes,
   setHowdidyouhear,
   setAllHowdidyouhear,
   setAllLessontextbooks,
   setAllStudents,
   setAllUsers,
 } from 'src/localstorage';
+import httpClient from 'src/utils/httpClient';
+import Backdrop from '@material-ui/core/Backdrop';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import { connectIntl, formatMessage } from 'src/contexts/Intl';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -320,7 +317,27 @@ const StudentsListView = ({ intl, currentLanguage }) => {
           setRooms(JSON.stringify(data));
           setAllRooms(JSON.stringify(json.rooms));
           global.rooms = data;
-          global.Allrooms = json.topics;
+          global.Allrooms = json.rooms;
+          getAllScheme();
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, [isMountedRef]);
+
+  const getAllScheme = useCallback(async () => {
+    httpClient.get(`api/markingscheme/all`)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          let data = []
+          json.schemes.map((val, index) => {
+            data.push(val.name);
+          })
+          setSchemes(JSON.stringify(data));
+          setAllSchemes(JSON.stringify(json.schemes));
+          global.schemes = data;
+          global.Allschemes = json.schemes;
           setOpen(false);
           setLoading(true);
         }
