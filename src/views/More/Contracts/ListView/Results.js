@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
 import { Link as RouterLink } from 'react-router-dom';
@@ -12,7 +11,6 @@ import {
   SvgIcon,
   Checkbox,
   TableRow,
-  useTheme,
   TableBody,
   TableCell,
   TableHead,
@@ -28,10 +26,6 @@ import {
 } from 'react-feather';
 import { useSnackbar } from 'notistack';
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogTitle from '@material-ui/core/DialogTitle';
 
 /* utils */
 import {
@@ -44,8 +38,6 @@ import {
   descendingComparator,
   handleDeleteAllSelected,
 } from 'src/utils/defaultTableSettings';
-
-/* connectIntl */
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
 
 const useStyles = makeStyles((theme) => ({
@@ -77,24 +69,32 @@ const useStyles = makeStyles((theme) => ({
 
 const Results = ({
   intl,
+  totalcount,
   contracts,
   className,
   deletecontract,
   deletecontracts,
+  handleSearchData,
 }) => {
   const classes = useStyles();
-  const [filters] = useState({});
   const [page, setPage] = useState(0);
   const [limit, setLimit] = useState(10);
-  const [query, setQuery] = useState('');
   const { enqueueSnackbar } = useSnackbar();
   const [selectedContracts, setSelectedContracts] = useState([]);
-  const [sort, setSort] = useState(sortOptionsDefault[2].value);
+  const [searchVals, setSearchvals] = React.useState({
+    name: ''
+  })
 
-  const handleQueryChange = (event) => {
-    event.persist();
-    setQuery(event.target.value);
+  const handleChangeSearchVal = (event) => {
+    let newdata = { ...searchVals }
+    newdata.name = event.target.value;
+    setSearchvals(newdata)
   };
+
+  useEffect(() => {
+    let data = { pagenum: 0, limitnum: 10, searchVal: searchVals };
+    handleSearchData(data);
+  }, [searchVals])
 
   const handleSelectAllContracts = (event) => {
     setSelectedContracts(event.target.checked
@@ -112,15 +112,16 @@ const Results = ({
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
+    let data = { searchVal: searchVals, pagenum: parseInt(newPage + '0'), limitnum: limit }
+    handleSearchData(data);
   };
 
   const handleLimitChange = (event) => {
     setLimit(parseInt(event.target.value));
+    let data = { searchVal: searchVals, pagenum: page, imitnum: event.target.value }
+    handleSearchData(data);
   };
 
-  const filteredContracts = applyFilters(contracts, query, filters);
-  const sortedContracts = applySort(filteredContracts, sort);
-  const paginatedContracts = applyPagination(sortedContracts, page, limit);
   const enableBulkOperations = selectedContracts.length > 0;
   const selectedSomeContracts = selectedContracts.length > 0 && selectedContracts.length < contracts.length;
   const selectedAllContracts = selectedContracts.length === contracts.length;
@@ -142,9 +143,9 @@ const Results = ({
               </InputAdornment>
             )
           }}
-          value={query}
+          value={searchVals.name}
           variant="outlined"
-          onChange={handleQueryChange}
+          onChange={handleChangeSearchVal}
           placeholder={formatMessage(intl.search)}
         />
       </Box>
@@ -159,13 +160,13 @@ const Results = ({
             <Button
               variant="outlined"
               className={classes.bulkAction}
-            // onClick={() => handleDeleteAllSelected(
-            //   selectedContracts,
-            //   deleteContracts,
-            //   setSelectedContracts,
-            //   enqueueSnackbar,
-            //   { ...intl, formatMessage }
-            // )}
+              onClick={() => handleDeleteAllSelected(
+                selectedContracts,
+                deletecontracts,
+                setSelectedContracts,
+                enqueueSnackbar,
+                { ...intl, formatMessage }
+              )}
             >
               {formatMessage(intl.deleteAll)}
             </Button>
@@ -200,7 +201,7 @@ const Results = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginatedContracts.map((n, index) => {
+              {contracts.map((n, index) => {
                 const isContractselected = selectedContracts.includes(n.id);
 
                 return (
@@ -218,11 +219,11 @@ const Results = ({
                     </TableCell>
 
                     <TableCell align="left">
-                      {n.contract}
+                      {n.name}
                     </TableCell>
 
                     <TableCell align="left">
-                      {n.payment}
+                      {`${n.cost} (${n.total}€)`}
                     </TableCell>
 
                     <TableCell align="center">
@@ -236,12 +237,12 @@ const Results = ({
                         </SvgIcon>
                       </IconButton>
                       <IconButton
-                        // onClick={() => handleDelete(
-                        //   n.id,
-                        //   deleteContract,
-                        //   enqueueSnackbar,
-                        //   { ...intl, formatMessage }
-                        // )}
+                        onClick={() => handleDelete(
+                          n.id,
+                          deletecontract,
+                          enqueueSnackbar,
+                          { ...intl, formatMessage }
+                        )}
                         title="Delete"
                       >
                         <SvgIcon fontSize="small">
@@ -258,7 +259,7 @@ const Results = ({
       </PerfectScrollbar>
       <TablePagination
         component="div"
-        count={filteredContracts.length}
+        count={totalcount}
         onChangePage={handlePageChange}
         onChangeRowsPerPage={handleLimitChange}
         page={page}
@@ -271,11 +272,13 @@ const Results = ({
 
 Results.propTypes = {
   className: PropTypes.string,
-  contracts: PropTypes.array.isRequired
+  contracts: PropTypes.array.isRequired,
+  totalcount: PropTypes.number,
 };
 
 Results.defaultProps = {
-  contracts: []
+  contracts: [],
+  totalcount: 0
 };
 
 const mapStateToProps = (store) => ({

@@ -48,7 +48,6 @@ const TextbookEditView = ({ match, intl }) => {
         if (json.success && isMountedRef.current) {
           setTextbook(json.textbook[0]);
           setStudents(json.students);
-          console.log(json)
           setOpen(false);
           setLoading(true);
         }

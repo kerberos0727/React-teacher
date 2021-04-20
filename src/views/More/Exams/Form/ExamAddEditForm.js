@@ -135,7 +135,7 @@ const ExamAddEditForm = ({ result, schedules, update, itemType, intl }) => {
     textbook: result.textbookname,
   });
   const [sections, setSections] = React.useState([]);
-  const [bigcatagory, setBigcatagory] = React.useState('')
+  const [bigcatagory, setBigcatagory] = React.useState('textbook')
   const [smallcatagory, setSmallcatagory] = React.useState('')
   const [type, setType] = React.useState(result.type)
   const [header, setHeader] = React.useState([]);
@@ -226,7 +226,7 @@ const ExamAddEditForm = ({ result, schedules, update, itemType, intl }) => {
   }
 
   const handleRemoveSectionItem = (index) => {
-    if (index !== 0) {
+    if (sections.length !== 1) {
       const newsectionitems = [...sections];
       newsectionitems.splice(index, 1);
       setSections(newsectionitems);
@@ -286,8 +286,10 @@ const ExamAddEditForm = ({ result, schedules, update, itemType, intl }) => {
               scheduled: values.scheduled ? "Y" : "N",
               markingscheme: schemeId
             }
-            const url = `api/more/exams/update`
-            const method = 'put';
+            // const url = `api/more/exams/update`
+            // const method = 'put';
+            const url = `api/more/exams/${(update) ? 'update' : 'create'}`
+            const method = (update) ? 'put' : 'post';
             httpClient[method](url, senddata)
               .then(json => {
                 if (json.success && isMountedRef.current) {
@@ -295,6 +297,7 @@ const ExamAddEditForm = ({ result, schedules, update, itemType, intl }) => {
                     'Updated successfully',
                     { variant: 'success' }
                   )
+                  history.push('/app/more/exams');
                 }
               })
               .catch((error) => {

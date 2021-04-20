@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import clsx from 'clsx';
 import { Formik } from 'formik';
+import { useHistory } from 'react-router';
 import PropTypes from 'prop-types';
 import {
   Grid,
@@ -14,6 +15,9 @@ import FixedTextField from 'src/components/FixedTextField';
 import 'src/components/global';
 import NumberFormat from 'react-number-format';
 import { connectIntl } from 'src/contexts/Intl';
+import httpClient from 'src/utils/httpClient';
+import useIsMountedRef from 'src/hooks/useIsMountedRef';
+import { useSnackbar } from 'notistack';
 
 const CssTextField = withStyles({
   root: {
@@ -156,43 +160,88 @@ const useStyles = makeStyles((theme) => ({
 
 const ContractAddEditForm = ({ contract, update }) => {
   const classes = useStyles();
+  const isMountedRef = useIsMountedRef();
+  const { enqueueSnackbar } = useSnackbar();
+  const history = useHistory();
   const [paymentitems, setPaymentitems] = React.useState([]);
+  const [contractid, setContractid] = React.useState(0)
 
   useEffect(() => {
-    let data = []
-    if (paymentitems.length === 0)
-      data.push(0)
-    setPaymentitems(data)
+    handleSetPaymentArr();
+    if (contract.length !== undefined)
+      setContractid(contract[0].id)
   }, [])
+
+  const handleSetPaymentArr = () => {
+    // console.log('contract.length--->', contract.length)
+    let data = []
+    if (contract.length !== 0)
+      for (let i = 0; i < contract.length; i++)
+        data.push(contract[i].cost);
+    if (contract.length === undefined)
+      data.push('')
+    setPaymentitems(data);
+  }
 
   const handleAddPaymentItem = () => {
     let data = [];
-    let demo = '0';
     if (paymentitems.length === 0)
-      data.push(demo)
+      data.push('')
     else {
       for (let i = 0; i < paymentitems.length; i++)
-        data.push(i)
-      data.push(paymentitems.length)
+        data.push(paymentitems[i])
+      data.push('')
     }
     setPaymentitems(data);
   }
 
   const handleRemovePaymentItem = (index) => {
-    const newgroupitems = [...paymentitems];
-    newgroupitems.splice(index, 1);
-    setPaymentitems(newgroupitems);
+    if (paymentitems.length !== 1) {
+      const newgroupitems = [...paymentitems];
+      newgroupitems.splice(index, 1);
+      setPaymentitems(newgroupitems);
+    }
+  }
+
+  const handleChangePrices = (event, index) => {
+    let data = [...paymentitems]
+    data[index] = event.target.value
+    setPaymentitems(data)
   }
 
   return (
     <Formik
       initialValues={{
-        contract: contract.contract || '',
-        hours: contract.hours || ''
+        name: contract.length !== undefined ? contract[0].name : '' || '',
+        hours: contract.length !== undefined ? contract[0].hours : '' || ''
       }}
       onSubmit={
         async (values, { setErrors }) => {
-
+          let senddata = {
+            values: values,
+            payments: paymentitems,
+            id: contractid
+          }
+          console.log(senddata)
+          const url = `api/more/contract/${(update) ? 'update' : 'create'}`
+          const method = (update) ? 'put' : 'post';
+          httpClient[method](url, senddata)
+            .then(json => {
+              if (json.success && isMountedRef.current) {
+                enqueueSnackbar(
+                  update ? 'Updated successfully' : 'Added successfully',
+                  { variant: 'success' }
+                )
+              }
+              else
+                enqueueSnackbar(
+                  'FAILD',
+                  { variant: 'error' }
+                )
+            })
+            .catch((error) => {
+              console.log(error);
+            });
         }
       }
     >
@@ -218,10 +267,11 @@ const ContractAddEditForm = ({ contract, update }) => {
                           <div className={classes.boldletter}>Contract:</div>
                           <CssTextField
                             required
-                            name="contract"
+                            name="name"
                             className={classes.inputStyle}
                             style={{ width: 300 }}
-                            value={values.contract}
+                            value={values.name}
+                            onChange={handleChange}
                           />
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -233,6 +283,7 @@ const ContractAddEditForm = ({ contract, update }) => {
                             style={{ width: 70 }}
                             value={values.hours}
                             placeholder="HH:MM"
+                            onChange={handleChange}
                           />
                         </div>
                       </div>
@@ -247,13 +298,15 @@ const ContractAddEditForm = ({ contract, update }) => {
                             return (
                               <div style={{ width: '100%', marginBottom: 20, display: 'flex' }} key={index}>
                                 <CssTextField1
-                                  key={index = 1}
+                                  key={index + 1}
                                   variant="outlined"
                                   name="price"
                                   InputProps={{
                                     inputComponent: NumberFormatCustom,
                                   }}
                                   placeholder="0,00 €"
+                                  value={val}
+                                  onChange={(e) => { handleChangePrices(e, index) }}
                                 />
                                 <Button
                                   key={index + 2}
@@ -277,6 +330,25 @@ const ContractAddEditForm = ({ contract, update }) => {
                             )
                           })
                         }
+                      </Grid>
+                      <Grid item xs={12}
+                        style={{ marginTop: 10, textAlign: 'right' }}
+                      >
+                        <Button
+                          color="secondary"
+                          variant="contained"
+                          style={{ marginRight: 10 }}
+                          onClick={() => { history.goBack() }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          color="secondary"
+                          variant="contained"
+                          type={'submit'}
+                        >
+                          Save
+                        </Button>
                       </Grid>
                     </Grid>
                   </Grid>

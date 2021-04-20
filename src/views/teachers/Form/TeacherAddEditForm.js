@@ -270,6 +270,7 @@ const TeacherAddEditForm = ({ teacher, books, update, intl }) => {
                     update ? 'Updated successfully' : 'Added successfully',
                     { variant: 'success' }
                   )
+                  history.push("/app/teachers")
                 }
                 else
                   enqueueSnackbar(
@@ -319,14 +320,15 @@ const TeacherAddEditForm = ({ teacher, books, update, intl }) => {
                       />
                     </div>
 
-                    <div className={classes.row_Div}>
-                      <div className={classes.boldletter}>Re Password:</div>
+                    <div className={classes.row_Div} style={update ? { display: 'none' } : { display: 'flex' }}>
+                      <div className={classes.boldletter}>Password:</div>
                       <CssTextField
                         required
                         name="password"
                         className={classes.inputStyle}
                         value={values.password}
                         onChange={handleChange}
+                        type="password"
                       />
                       <div className={classes.boldletter}>Re Password:</div>
                       <CssTextField
@@ -335,6 +337,7 @@ const TeacherAddEditForm = ({ teacher, books, update, intl }) => {
                         className={classes.inputStyle}
                         value={values.repassword}
                         onChange={handleChange}
+                        type="password"
                       />
                     </div>
 

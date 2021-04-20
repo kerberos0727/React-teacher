@@ -13,12 +13,10 @@ import { useParams } from 'react-router-dom';
 import ContractEditForm from '../Form/ContractAddEditForm';
 import Header from 'src/components/HeaderBreadcrumbs';
 import useIsMountedRef from 'src/hooks/useIsMountedRef';
-
-/* utils */
+import Backdrop from '@material-ui/core/Backdrop';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import httpClient from 'src/utils/httpClient';
 import axios from 'src/utils/axios';
-
-/* connectIntl */
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
 
 const useStyles = makeStyles((theme) => ({
@@ -27,7 +25,11 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: theme.spacing(3),
     paddingBottom: theme.spacing(3),
     backgroundColor: theme.palette.background.dark,
-  }
+  },
+  backdrop: {
+    zIndex: theme.zIndex.drawer + 1,
+    color: '#fff',
+  },
 }));
 
 const ContractEditView = ({ match, intl }) => {
@@ -35,16 +37,30 @@ const ContractEditView = ({ match, intl }) => {
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
   const [contract, setContract] = useState(null);
+  const [loading, setLoading] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
 
   const getContract = useCallback(async () => {
-    try {
-      const response = await axios.get(`/api/more/contracts/1`);
-      if (isMountedRef.current) {
-        setContract(response.data.contract);
-      }
-    } catch (err) {
-      console.log(err)
-    }
+    httpClient.get(`api/more/contract/${params.contractId}`)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          setContract(json.contract);
+          setOpen(false);
+          setLoading(true);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+
+    // try {
+    //   const response = await axios.get(`/api/more/contracts/1`);
+    //   if (isMountedRef.current) {
+    //     setContract(response.data.contract);
+    //   }
+    // } catch (err) {
+    //   console.log(err)
+    // }
   }, [isMountedRef, params.contractId]);
 
   useEffect(() => {
@@ -65,7 +81,15 @@ const ContractEditView = ({ match, intl }) => {
       </Container>
       <Box mt={3}>
         <Container maxWidth="md">
-          <ContractEditForm update contract={contract} />
+          {
+            loading ?
+              <ContractEditForm update contract={contract} /> :
+              <div>
+                <Backdrop className={classes.backdrop} open={open}>
+                  <CircularProgress color="inherit" />
+                </Backdrop>
+              </div>
+          }
         </Container>
       </Box>
     </Page>

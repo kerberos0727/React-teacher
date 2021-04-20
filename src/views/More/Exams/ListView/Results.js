@@ -261,8 +261,8 @@ const Results = ({
         index={value}
         onChangeIndex={handleChangeIndex}
       >
-        <TabPanel value={value} index={0} dir={theme.direction} id="alsdfjaslkdhfasdfhs">
-          <Card className={clsx(classes.root, className)} id="12345678" >
+        <TabPanel value={value} index={0} dir={theme.direction}>
+          <Card className={clsx(classes.root, className)}>
             <Box p={2} alignItems="center" >
               <TextField
                 className={classes.queryField}
@@ -283,6 +283,15 @@ const Results = ({
                 onChange={(e) => handleChangeSearchVal('result', e)}
                 placeholder={formatMessage(intl.search)}
               />
+              <Button
+                color="secondary"
+                variant="contained"
+                style={{ marginLeft: 10 }}
+                component={RouterLink}
+                to={formatMessage(intl.urlMoreExamsAdd, { itemType: 'result' })}
+              >
+                New
+              </Button>
             </Box>
             {enableBulkOperations && (
               <div className={classes.bulkOperations}>

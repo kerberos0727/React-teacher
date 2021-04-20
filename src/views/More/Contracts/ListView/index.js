@@ -12,13 +12,9 @@ import Results from './Results';
 import Page from 'src/components/Page';
 import Header from 'src/components/HeaderBreadcrumbs';
 import useIsMountedRef from 'src/hooks/useIsMountedRef';
-import { useSnackbar } from 'notistack';
-import axios from 'src/utils/axios';
-
-/* utils */
+import Backdrop from '@material-ui/core/Backdrop';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import httpClient from 'src/utils/httpClient';
-
-/* connectIntl */
 import { connectIntl, formatMessage } from 'src/contexts/Intl';
 
 const useStyles = makeStyles((theme) => ({
@@ -27,48 +23,77 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: theme.spacing(3),
     paddingBottom: theme.spacing(3),
     backgroundColor: theme.palette.background.dark,
-  }
+  },
+  backdrop: {
+    zIndex: theme.zIndex.drawer + 1,
+    color: '#fff',
+  },
 }));
 
 const ContractsListView = ({ intl, currentLanguage }) => {
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
   const [contracts, setContracts] = useState([]);
+  const [totalcount, setTotalcount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = React.useState(false);
 
-  const deletecontracts = (selectedContracts) => {
-    // let temp = [];
-    // const eliminatedList = [];
-    // results.forEach((n) => {
-    //   if (!selectedItems.includes(n.id)) {
-    //     temp.push(n)
-    //   } else {
-    //     eliminatedList.push(deleteItem(n.id));
-    //   }
-    // })
-    // return eliminatedList;
+  const deletecontracts = (selectedTextbooks) => {
+    let temp = [];
+    const eliminatedList = [];
+    contracts.forEach((n) => {
+      if (!selectedTextbooks.includes(n.id)) {
+        temp.push(n)
+      } else {
+        eliminatedList.push(deletecontract(n.id));
+      }
+    })
+    return eliminatedList;
   }
 
   const deletecontract = (id) => {
-    // httpClient.delete(`api/contracts/${id}`);
-    // setResults((prevState) => prevState.filter((el) => el.id != id))
-    // return id;
+    httpClient.delete(`api/more/contract/${id}`);
+    setContracts((prevState) => prevState.filter((el) => el.id != id))
+    return id;
   }
 
   const getContracts = useCallback(async () => {
-    try {
-      const response = await axios.get(`api/more/contracts/all`);
-      if (isMountedRef.current) {
-        setContracts(response.data.contracts);
-      }
-    } catch (err) {
-      console.log(err)
-    }
+    let data = { pagenum: 0, limitnum: 10, searchVal: { name: '' } };
+    const url = `api/more/contract/all`
+    const method = 'post';
+    httpClient[method](url, data)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          setContracts(json.contracts);
+          setTotalcount(json.total);
+          setOpen(false)
+          setLoading(true)
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }, [isMountedRef]);
 
   useEffect(() => {
+    setOpen(true);
     getContracts();
   }, [getContracts]);
 
+  const handleSearchData = (data) => {
+    const url = `api/more/contract/all`
+    const method = 'post';
+    httpClient[method](url, data)
+      .then(json => {
+        if (json.success && isMountedRef.current) {
+          setContracts(json.contracts);
+          setTotalcount(json.total);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
 
   return (
     <Page
@@ -81,11 +106,21 @@ const ContractsListView = ({ intl, currentLanguage }) => {
           buttonRight={{ to: formatMessage(intl.urlContractAdd), label: 'new Contract' }}
         />
         <Box mt={3}>
-          <Results
-            contracts={contracts}
-            deletecontract={deletecontract}
-            deletecontracts={deletecontracts}
-          />
+          {
+            loading ?
+              <Results
+                contracts={contracts}
+                totalcount={totalcount}
+                deletecontract={deletecontract}
+                deletecontracts={deletecontracts}
+                handleSearchData={handleSearchData}
+              /> :
+              <div>
+                <Backdrop className={classes.backdrop} open={open}>
+                  <CircularProgress color="inherit" />
+                </Backdrop>
+              </div>
+          }
         </Box>
       </Container>
     </Page>

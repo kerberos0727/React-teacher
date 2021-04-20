@@ -167,7 +167,7 @@ const TeacherInfo = ({ teacher, books, observers, intl }) => {
 
   return (
     <Card className={clsx(classes.root)} >
-      <CardHeader title={formatMessage(intl.teacherDetail)} />
+      <CardHeader title={`${teacher.name} Detail`} />
       <Divider />
       <Grid container>
         <Grid item xs={12} style={{ padding: 10 }}>
