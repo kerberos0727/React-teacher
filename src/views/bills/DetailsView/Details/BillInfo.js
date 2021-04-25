@@ -287,12 +287,13 @@ const BillInfo = ({ bill, billNum }) => {
 
   const handleSaveXML = () => {
     var FileSaver = require('file-saver');
-    var file = new File([handlegetBillText(bill.billText.data)], billNum + ".xml", { type: "text/plain;charset=utf-8" });
+    let res = '', billtext = bill.billText.data;
+    for (var i = 0; i < billtext.length; i++) {
+      res += String.fromCharCode(billtext[i]);
+    }
+    // var file = new File([handlegetBillText(bill.billText.data)], billNum + ".xml", { type: "text/plain;charset=utf-8" });
+    var file = new File([res], billNum + ".xml", { type: "text/plain;charset=utf-8" });
     FileSaver.saveAs(file);
-  }
-
-  const handlePrint = () => {
-
   }
 
   return (

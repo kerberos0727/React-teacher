@@ -320,7 +320,7 @@ const TeacherAddEditForm = ({ teacher, books, update, intl }) => {
                       />
                     </div>
 
-                    <div className={classes.row_Div} style={update ? { display: 'none' } : { display: 'flex' }}>
+                    <div className={classes.row_Div} style={{ display: 'none' }}>
                       <div className={classes.boldletter}>Password:</div>
                       <CssTextField
                         required

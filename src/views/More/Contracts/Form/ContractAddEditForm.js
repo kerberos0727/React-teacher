@@ -232,6 +232,7 @@ const ContractAddEditForm = ({ contract, update }) => {
                   update ? 'Updated successfully' : 'Added successfully',
                   { variant: 'success' }
                 )
+                history.push('/app/more/contracts');
               }
               else
                 enqueueSnackbar(
