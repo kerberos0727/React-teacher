@@ -150,13 +150,24 @@ export default function routes(keyGen) {
 		},
 		// log end
 
+		// start certification
+		urlMoreCertificates: {
+			key: keyGen(),
+			defaultMessage: '/app/more/certification'
+		},
+		urlCertificationDetail: {
+			key: keyGen(),
+			defaultMessage: '/app/more/certification/{certificationId}/detail'
+		},
+		urlCertificationEdit: {
+			key: keyGen(),
+			defaultMessage: '/app/certification/{certificationId}/edit'
+		},
+		// end sertification
+
 		urlMoreLibrary: {
 			key: keyGen(),
 			defaultMessage: '/app/operation'
-		},
-		urlMoreCertificates: {
-			key: keyGen(),
-			defaultMessage: '/app/support'
 		},
 		urlMoreBell: {
 			key: keyGen(),

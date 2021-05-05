@@ -10,7 +10,6 @@ import Button from '@material-ui/core/Button';
 import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles';
 import { connectIntl } from 'src/contexts/Intl';
-import { useSnackbar } from 'notistack';
 import renderHTML from 'react-render-html';
 import Dialog from '@material-ui/core/Dialog';
 import DialogContent from '@material-ui/core/DialogContent';

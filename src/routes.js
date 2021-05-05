@@ -412,6 +412,37 @@ const routes = [
       },
       // log end
 
+      // start certification
+      {
+        exact: true,
+        multilanguage: true,
+        path: 'urlMoreCertificates',
+        component: lazy(() => import('src/views/More/Certification/ListView'))
+      },
+      {
+        exact: true,
+        multilanguage: true,
+        path: {
+          value: 'urlCertificationDetail',
+          params: {
+            certificationId: ':certificationId'
+          }
+        },
+        component: lazy(() => import('src/views/More/Certification/DetailsView'))
+      },
+      {
+        exact: true,
+        multilanguage: true,
+        path: {
+          value: 'urlCertificationEdit',
+          params: {
+            certificationId: ':certificationId'
+          }
+        },
+        component: lazy(() => import('src/views/More/Certification/EditView'))
+      },
+      // end certification
+
       // start exams
       {
         exact: true,

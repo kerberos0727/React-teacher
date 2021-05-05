@@ -58,6 +58,7 @@
     "firebase": "^7.17.1",
     "formik": "^2.1.5",
     "history": "^4.10.1",
+    "html-docx-js-typescript": "^0.1.5",
     "immer": "^6.0.9",
     "immutable": "^4.0.0-rc.12",
     "js-cookie": "^2.2.1",
@@ -111,6 +112,7 @@
     "redux-thunk": "^2.3.0",
     "uuid": "^7.0.3",
     "vanilla-masker": "^1.2.0",
+    "xlsx": "^0.16.9",
     "yup": "^0.28.5"
   },
   "devDependencies": {

@@ -54,6 +54,14 @@ export default {
 		key: keyGen(),
 		defaultMessage: 'Teachers'
 	},
+	certification: {
+		key: keyGen(),
+		defaultMessage: 'Certifications'
+	},
+	certificationDetail: {
+		key: keyGen(),
+		defaultMessage: 'Certification Detail'
+	},
 	textbooks: {
 		key: keyGen(),
 		defaultMessage: 'Textbooks'

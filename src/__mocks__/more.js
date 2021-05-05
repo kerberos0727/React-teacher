@@ -238,6 +238,108 @@ const languages = [
 
 mock.onGet('/api/more/languages/all').reply(200, { languages });
 
+const certifications = [
+  {
+    id: '1',
+    number: '21-17',
+    student: 'Veronica Zegarra Hinojosa',
+    user: 'Marco',
+    issued: '20-04-2021',
+  },
+  {
+    id: '2',
+    number: '21-17',
+    student: 'Veronica Zegarra Hinojosa',
+    user: 'Marco',
+    issued: '20-04-2021',
+  },
+  {
+    id: '3',
+    number: '21-17',
+    student: 'Veronica Zegarra Hinojosa',
+    user: 'Marco',
+    issued: '20-04-2021',
+  },
+  {
+    id: '4',
+    number: '21-17',
+    student: 'Veronica Zegarra Hinojosa',
+    user: 'Marco',
+    issued: '20-04-2021',
+  },
+  {
+    id: '5',
+    number: '21-17',
+    student: 'Veronica Zegarra Hinojosa',
+    user: 'Marco',
+    issued: '20-04-2021',
+  },
+  {
+    id: '6',
+    number: '21-17',
+    student: 'Veronica Zegarra Hinojosa',
+    user: 'Marco',
+    issued: '20-04-2021',
+  },
+  {
+    id: '7',
+    number: '21-17',
+    student: 'Veronica Zegarra Hinojosa',
+    user: 'Marco',
+    issued: '20-04-2021',
+  },
+  {
+    id: '8',
+    number: '21-17',
+    student: 'Veronica Zegarra Hinojosa',
+    user: 'Marco',
+    issued: '20-04-2021',
+  },
+  {
+    id: '9',
+    number: '21-17',
+    student: 'Veronica Zegarra Hinojosa',
+    user: 'Marco',
+    issued: '20-04-2021',
+  },
+  {
+    id: '10',
+    number: '21-17',
+    student: 'Veronica Zegarra Hinojosa',
+    user: 'Marco',
+    issued: '20-04-2021',
+  },
+  {
+    id: '11',
+    number: '21-17',
+    student: 'Veronica Zegarra Hinojosa',
+    user: 'Marco',
+    issued: '20-04-2021',
+  },
+];
+
+mock.onGet('/api/more/certification/all').reply(200, { certifications });
+
+mock.onGet('/api/more/certification/1').reply(() => {
+  const certification = {
+    student: "Veronica Zegarra Hinojosa (517245380W)",
+    name: "Veronica Zegarra Hinojosa",
+    id_number: "517245380W",
+    hours: "733:00",
+    dates: "27-03-2017-11-11-2020",
+    level_reached: "Advanced",
+    certificate_number: "21-17",
+    issue_date: "20-04-2021",
+    from: "03-27-2017",
+    to: "11-11-2021",
+    user: "Marco",
+    user_title: "Manager",
+    full_user_name: "Leila Seif",
+  };
+
+  return [200, { certification }];
+});
+
 const lessons = [
   {
     id: '1',
