@@ -163,6 +163,10 @@ export default function routes(keyGen) {
 			key: keyGen(),
 			defaultMessage: '/app/certification/{certificationId}/edit'
 		},
+		urlCertificationAdd: {
+			key: keyGen(),
+			defaultMessage: '/app/certification/{studentId}/add'
+		},
 		// end sertification
 
 		urlMoreLibrary: {

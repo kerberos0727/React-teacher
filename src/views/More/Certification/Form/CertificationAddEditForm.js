@@ -132,7 +132,7 @@ const CertificationAddEditForm = ({ certification, update, intl }) => {
   return (
     <Formik
       initialValues={{
-        issueDate: certification.issueDate || '',
+        issueDate: certification.issueDate || new Date(),
         startDate: certification.startDate || '',
         endDate: certification.endDate || '',
         mins: timeConvert(certification.mins) || '',

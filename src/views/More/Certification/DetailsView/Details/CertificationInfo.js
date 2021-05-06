@@ -96,7 +96,7 @@ const CertificationInfo = ({ certification, intl }) => {
           </body>
         </html>`
     asBlob(htmlString).then(data => {
-      saveAs(data, 'file.docx')
+      saveAs(data, `${certification.studentName}.docx`)
     })
   }
 

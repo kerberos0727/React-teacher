@@ -665,6 +665,8 @@ const Results = ({
                         </SvgIcon>
                       </IconButton>
                       <IconButton
+                        component={RouterLink}
+                        to={formatMessage(intl.urlCertificationAdd, { studentId: n.id })}
                         title="Create certificate"
                       >
                         <SvgIcon fontSize="small">

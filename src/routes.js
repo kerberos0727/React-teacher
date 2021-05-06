@@ -441,6 +441,17 @@ const routes = [
         },
         component: lazy(() => import('src/views/More/Certification/EditView'))
       },
+      {
+        exact: true,
+        multilanguage: true,
+        path: {
+          value: 'urlCertificationAdd',
+          params: {
+            studentId: ':studentId'
+          }
+        },
+        component: lazy(() => import('src/views/More/Certification/AddView'))
+      },
       // end certification
 
       // start exams
